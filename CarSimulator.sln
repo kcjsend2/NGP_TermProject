@@ -5,6 +5,10 @@ VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CarSimulator", "CarSimulator\CarSimulator.vcxproj", "{A47EE9D7-846F-4FDB-B565-48F3E58DB87C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NGP_Prototype_Server", "NGP_Prototype_Server\NGP_Prototype_Server.vcxproj", "{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NGP_Prototype_Client", "NGP_Prototype_Client\NGP_Prototype_Client.vcxproj", "{1C1E1693-EFD3-4BF8-9DE4-DAD800406334}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +25,22 @@ Global
 		{A47EE9D7-846F-4FDB-B565-48F3E58DB87C}.Release|x64.Build.0 = Release|x64
 		{A47EE9D7-846F-4FDB-B565-48F3E58DB87C}.Release|x86.ActiveCfg = Release|Win32
 		{A47EE9D7-846F-4FDB-B565-48F3E58DB87C}.Release|x86.Build.0 = Release|Win32
+		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Debug|x64.ActiveCfg = Debug|x64
+		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Debug|x64.Build.0 = Debug|x64
+		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Debug|x86.ActiveCfg = Debug|Win32
+		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Debug|x86.Build.0 = Debug|Win32
+		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Release|x64.ActiveCfg = Release|x64
+		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Release|x64.Build.0 = Release|x64
+		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Release|x86.ActiveCfg = Release|Win32
+		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Release|x86.Build.0 = Release|Win32
+		{1C1E1693-EFD3-4BF8-9DE4-DAD800406334}.Debug|x64.ActiveCfg = Debug|x64
+		{1C1E1693-EFD3-4BF8-9DE4-DAD800406334}.Debug|x64.Build.0 = Debug|x64
+		{1C1E1693-EFD3-4BF8-9DE4-DAD800406334}.Debug|x86.ActiveCfg = Debug|Win32
+		{1C1E1693-EFD3-4BF8-9DE4-DAD800406334}.Debug|x86.Build.0 = Debug|Win32
+		{1C1E1693-EFD3-4BF8-9DE4-DAD800406334}.Release|x64.ActiveCfg = Release|x64
+		{1C1E1693-EFD3-4BF8-9DE4-DAD800406334}.Release|x64.Build.0 = Release|x64
+		{1C1E1693-EFD3-4BF8-9DE4-DAD800406334}.Release|x86.ActiveCfg = Release|Win32
+		{1C1E1693-EFD3-4BF8-9DE4-DAD800406334}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
