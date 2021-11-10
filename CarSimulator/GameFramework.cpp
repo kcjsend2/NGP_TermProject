@@ -3,6 +3,59 @@
 
 using namespace std;
 
+void err_display(char* msg)
+{
+	LPVOID lpMsgBuf;
+	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, WSAGetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
+	wchar_t wtext[20];
+	mbstowcs(wtext, msg, strlen(msg) + 1);
+	LPWSTR ptr = wtext;
+
+	MessageBox(NULL, (LPCTSTR)lpMsgBuf, wtext, MB_ICONERROR);
+
+	LocalFree(lpMsgBuf);
+}
+
+void err_quit(char* msg)
+{
+	LPVOID lpMsgBuf;
+	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, WSAGetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
+
+	wchar_t wtext[20];
+	mbstowcs(wtext, msg, strlen(msg) + 1);
+	LPWSTR ptr = wtext;
+
+	MessageBox(NULL, (LPCTSTR)lpMsgBuf, wtext, MB_ICONERROR);
+	LocalFree(lpMsgBuf);
+	exit(1);
+}
+
+int recvn(SOCKET s, char* buf, int len, int flags)
+{
+	int received;
+	char* ptr = buf;
+	int left = len;
+
+	// 남은 바이트가 0이면 수신 종료
+	while (left > 0)
+	{
+		received = recv(s, ptr, left, flags);
+		if (received == SOCKET_ERROR)
+		{
+			return SOCKET_ERROR;
+		}
+		else if (received == 0)
+		{
+			break;
+		}
+
+		left -= received;
+		ptr += received;
+	}
+	return (len - left);
+}
+
+
 CGameFramework::CGameFramework()
 {
 	/*m_pdxgiFactory = NULL;
@@ -310,6 +363,110 @@ void CGameFramework::CreateDepthStencilView()
 	//깊이-스텐실 버퍼 뷰를 생성한다.
 }
 
+
+DWORD WINAPI TransportData(LPVOID arg)
+{
+	CRITICAL_SECTION cs;
+	InitializeCriticalSection(&cs);
+
+	Thread_Parameter* pParam = (Thread_Parameter*)arg;
+
+	CVehiclePlayer* pPlayer = pParam->pPlayer;
+	SOCKET clientSock = pParam->clientSocket;
+
+	PlayerData pRecvData;
+	int msgType;
+
+	while (1)
+	{
+		EnterCriticalSection(&cs);
+
+		PlayerData pSendData{ PLAYER_STATUS, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 3, false, {0.0f, 0.0f, 0.0f}, false };
+		if (send(clientSock, (char*)&pSendData, sizeof(PlayerData), 0) == SOCKET_ERROR)
+		{
+			err_quit("send()");
+		}
+
+		for (int i = 0; i < 2; ++i)
+		{
+			ZeroMemory(&pRecvData, sizeof(PlayerData));
+			recvn(clientSock, (char*)&pRecvData, sizeof(PlayerData), 0);
+
+			// 분기, 플레이어 조작
+			if (pRecvData.m_dType == PLAYER_STATUS)
+			{
+			}
+			else if (pRecvData.m_dType == GAME_OVER)
+			{
+				break;
+			}
+		}
+
+		LeaveCriticalSection(&cs);
+	}
+
+	EnterCriticalSection(&cs);
+	closesocket(clientSock);
+	LeaveCriticalSection(&cs);
+
+	DeleteCriticalSection(&cs);
+
+	WSACleanup();
+}
+
+void CGameFramework::InitNetworkSocket(CVehiclePlayer* pPlayer)
+{
+	LPWSTR* szArgList;
+	int argCount;
+	int msgType;
+
+	szArgList = CommandLineToArgvW(GetCommandLine(), &argCount);
+
+	WSADATA wsa;
+
+	WSAStartup(MAKEWORD(2, 2), &wsa);
+
+	// socket()
+	m_clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+	if (m_clientSocket == INVALID_SOCKET) err_quit("socket()");
+
+	char ctext[20];
+	wcstombs(ctext, szArgList[1], wcslen(szArgList[1]) + 1);
+	const char* sAddr = ctext;
+
+	// connect()
+	SOCKADDR_IN serveraddr;
+	ZeroMemory(&serveraddr, sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_addr.s_addr = inet_addr(sAddr);
+
+	wcstombs(ctext, szArgList[2], wcslen(szArgList[2]) + 1);
+	const char* sPort = ctext;
+	serveraddr.sin_port = htons(atoi(sPort));
+	if (connect(m_clientSocket, (SOCKADDR*)&serveraddr, sizeof(serveraddr)) == SOCKET_ERROR)
+	{
+		err_display("connect()");
+	}
+
+	std::array<PlayerData, 2> aOtherPlayerData;
+
+	// 시작 신호를 기다림
+	while (1)
+	{
+		recvn(m_clientSocket, (char*)&msgType, sizeof(int), 0);
+
+		if (msgType == GAME_START)
+		{
+			break;
+		}
+	}
+	Thread_Parameter* pParam = new Thread_Parameter;
+	pParam->clientSocket = m_clientSocket;
+	pParam->pPlayer = m_pPlayer.get();
+
+	CreateThread(NULL, 0, TransportData, pParam, 0, NULL);
+}
+
 void CGameFramework::BuildObjects()
 {
 	m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), NULL);
@@ -338,6 +495,8 @@ void CGameFramework::BuildObjects()
 	ID3D12CommandList* ppd3dCommandLists[] = { m_pd3dCommandList.Get() };
 	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
 	WaitForGpuComplete();
+
+	InitNetworkSocket(m_pPlayer.get());
 
 	Update();
 	// 쉐도우맵은 모든 오브젝트를 그려야한다.
