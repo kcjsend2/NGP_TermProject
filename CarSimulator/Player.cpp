@@ -678,8 +678,11 @@ int CVehiclePlayer::recvn(SOCKET s, char* buf, int len, int flags)
 	return (len - left);
 }
 
-DWORD WINAPI RecvData(LPVOID arg)
+DWORD WINAPI TransportData(LPVOID arg)
 {
+	CRITICAL_SECTION cs;
+	InitializeCriticalSection(&cs);
+
 	CVehiclePlayer* pPlayer = (CVehiclePlayer*)arg;
 	PlayerData pRecvData;
 	int msgType;
@@ -714,13 +717,14 @@ DWORD WINAPI RecvData(LPVOID arg)
 
 	closesocket(*pPlayer->GetClientSocket());
 
+	DeleteCriticalSection(&cs);
+
 	WSACleanup();
 }
 
 
 void CVehiclePlayer::InitNetworkSocket()
 {
-	InitializeCriticalSection(&cs);
 
 	LPWSTR* szArgList;
 	int argCount;
@@ -767,7 +771,7 @@ void CVehiclePlayer::InitNetworkSocket()
 		}
 	}
 
-	CreateThread(NULL, 0, RecvData, this, 0, NULL);
+	CreateThread(NULL, 0, TransportData, this, 0, NULL);
 }
 
 CVehiclePlayer::CWheel::CWheel(std::shared_ptr<CMeshFileRead> pWheelMesh)
