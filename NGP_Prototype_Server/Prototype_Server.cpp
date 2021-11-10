@@ -1,73 +1,6 @@
-#pragma comment(lib, "ws2_32")
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <fstream>
-#include <DirectXMath.h>
-#include <DirectXCollision.h>
-#include <array>
-#include <iostream>
-
-using namespace std;
-using namespace DirectX;
-
-enum dataType
-{
-    GAME_START,
-    GAME_OVER,
-    PLAYER_STATUS
-};
-
+#include"Prototype_Server.h"
 
 // 항상 PlayerData 형식으로 데이터가 송수신된다.
-#pragma pack(1)
-struct PlayerData
-{
-    int m_dType;
-    XMFLOAT3 m_position; 	// 플레이어 위치
-    XMFLOAT3 m_rotate;		// 플레이어 회전 정보(roll, pitch, yaw)
-    int m_life;			// 플레이어의 목숨 수
-    bool m_bHasBullet;		// 총알 유무
-    XMFLOAT3 m_bulletPosition;	// 총알 위치
-    bool m_bIntersected;
-
-    PlayerData()
-    {
-        m_dType = NULL;
-        m_position = { 0.0f, 0.0f, 0.0f };
-        m_rotate = { 0.0f, 0.0f, 0.0f };
-        m_life = 0;
-        m_bHasBullet = false;
-        m_bulletPosition = { 0.0f, 0.0f, 0.0f };
-        m_bIntersected = false;
-    }
-
-    PlayerData(int Type, XMFLOAT3 Position, XMFLOAT3 rotate, int life, bool hasBullet, XMFLOAT3 bulletPosition, bool bIntersected)
-    {
-        m_dType = Type;
-        m_position = Position;
-        m_rotate = rotate;
-        m_life = life;
-        m_bHasBullet = hasBullet;
-        m_bulletPosition = bulletPosition;
-        m_bIntersected = bIntersected;
-    }
-
-    PlayerData(int Type)
-    {
-        m_dType = Type;
-        m_position = { 0.0f, 0.0f, 0.0f };
-        m_rotate = { 0.0f, 0.0f, 0.0f };
-        m_life = 0;
-        m_bHasBullet = false;
-        m_bulletPosition = { 0.0f, 0.0f, 0.0f };
-        m_bIntersected = false;
-    }
-};
-array<PlayerData, 3> aPlayerData;
-CRITICAL_SECTION cs;
-
 // 소켓 함수 오류 출력 후 종료
 void err_quit(char* msg)
 {
@@ -121,12 +54,8 @@ int recvn(SOCKET s, char* buf, int len, int flags)
 // 호출 규약 - __stdcall : 해당 함수는 __stdcall 호출 규약을 따른다.
 // 스레드 함수는 운영체제에서 호출하고, 운영체제는 __stdcall 규약에 따라 호출하기 때문에, 해당 함수의 호출 규약을 __stdcall로 강제한다.
 
-struct ProcessClientData_Parameter
-{
-    SOCKET sock;
-    int id;
-};
 
+//Is Client Function? why is here?
 DWORD WINAPI ProcessClientData(LPVOID arg)
 {
     //중간에 클라이언트가 종료되지 않는다는 가정하에 게임이 진행된다.
@@ -264,4 +193,28 @@ int main(int argc, char* argv[])
     WSACleanup();
 
     return 0;
+}
+
+
+//Receive
+void RecvType(const SOCKET& sock)
+{
+    INT type;
+    recvn(sock, (char*)type, sizeof(type), 0);
+
+    if (type && GAME_OVER)
+    {
+        //1. Winner Player ID check
+        //2. End Game
+    }
+    if (type && PLAYER_STATUS)
+    {
+        //1.recv Player_Status
+        //2.Player_Status Update
+    }
+    if (type && PLAYER_DEAD)
+    {
+        //1. Player id check
+        //2. (ID)Player is dead
+    }
 }
