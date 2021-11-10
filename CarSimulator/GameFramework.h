@@ -101,6 +101,7 @@ public:
 	void BuildDescriptorHeaps();
 	void CreateDirect3DDevice();
 	void CreateCommandQueueAndList();
+	void InitNetworkSocket();
 	//스왑 체인, 디바이스, 서술자 힙, 명령 큐/할당자/리스트를 생성하는 함수이다.
 
 	void CreateRenderTargetViews();
@@ -129,4 +130,7 @@ public:
 
 	void ChangeSwapChainState();
 	void MoveToNextFrame();
+
+	void err_display(char* msg);
+	void err_quit(char* msg);
 };

@@ -58,7 +58,7 @@ bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 	m_hInstance = hInstance;
 	m_hWnd = hMainWnd;
 
-
+	InitNetworkSocket();
 	CreateDirect3DDevice();
 	CreateCommandQueueAndList();
 	CreateRtvAndDsvDescriptorHeaps();
@@ -199,6 +199,84 @@ void CGameFramework::CreateCommandQueueAndList()
 
 	hResult = m_pd3dCommandList->Close();
 	//명령 리스트는 생성되면 열린(Open) 상태이므로 닫힌(Closed) 상태로 만든다
+}
+
+void CGameFramework::InitNetworkSocket()
+{
+	LPWSTR* szArgList;
+	int argCount;
+
+	szArgList = CommandLineToArgvW(GetCommandLine(), &argCount);
+
+	WSADATA wsa;
+
+	WSAStartup(MAKEWORD(2, 2), &wsa);
+
+	// socket()
+	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock == INVALID_SOCKET) err_quit("socket()");
+
+	char ctext[20];
+	wcstombs(ctext, szArgList[1], wcslen(szArgList[1]) + 1);
+	const char* sAddr = ctext;
+
+	// connect()
+	SOCKADDR_IN serveraddr;
+	ZeroMemory(&serveraddr, sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_addr.s_addr = inet_addr(sAddr);
+
+	wcstombs(ctext, szArgList[2], wcslen(szArgList[2]) + 1);
+	const char* sPort = ctext;
+	serveraddr.sin_port = htons(atoi(sPort));
+	if (connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr)) == SOCKET_ERROR)
+	{
+		err_display("connect()");
+	}
+
+
+	array<PlayerData, 2> aOtherPlayerData;
+	PlayerData pRecvData;
+
+	// 시작 신호를 기다림
+	while (1)
+	{
+		recvn(sock, (char*)&pRecvData, sizeof(PlayerData), 0);
+
+		if (pRecvData.m_dType == GAME_START)
+		{
+			break;
+		}
+	}
+
+	while (1)
+	{
+		PlayerData pSendData{ PLAYER_STATUS, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 3, false, {0.0f, 0.0f, 0.0f}, false };
+		if (send(sock, (char*)&pSendData, sizeof(PlayerData), 0) == SOCKET_ERROR)
+		{
+			err_quit("send()");
+		}
+
+		for (int i = 0; i < 2; ++i)
+		{
+			ZeroMemory(&pRecvData, sizeof(PlayerData));
+			recvn(sock, (char*)&pRecvData, sizeof(PlayerData), 0);
+			aOtherPlayerData[i] = pRecvData;
+
+			if (pRecvData.m_dType == PLAYER_STATUS)
+			{
+				aOtherPlayerData[i] = pRecvData;
+			}
+			else if (pRecvData.m_dType == GAME_OVER)
+			{
+				break;
+			}
+		}
+	}
+
+	closesocket(sock);
+
+	WSACleanup();
 }
 
 void CGameFramework::CreateRtvAndDsvDescriptorHeaps()
@@ -485,6 +563,58 @@ void CGameFramework::MoveToNextFrame()
 		hResult = m_pd3dFence->SetEventOnCompletion(nFenceValue, m_hFenceEvent);
 		::WaitForSingleObject(m_hFenceEvent, INFINITE);
 	}
+}
+
+void CGameFramework::err_display(char* msg)
+{
+	LPVOID lpMsgBuf;
+	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, WSAGetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
+	wchar_t wtext[20];
+	mbstowcs(wtext, msg, strlen(msg) + 1);
+	LPWSTR ptr = wtext;
+
+	MessageBox(NULL, (LPCTSTR)lpMsgBuf, wtext, MB_ICONERROR);
+
+	LocalFree(lpMsgBuf);
+}
+
+void CGameFramework::err_quit(char* msg)
+{
+	LPVOID lpMsgBuf;
+	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, WSAGetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
+
+	wchar_t wtext[20];
+	mbstowcs(wtext, msg, strlen(msg) + 1);
+	LPWSTR ptr = wtext;
+
+	MessageBox(NULL, (LPCTSTR)lpMsgBuf, wtext, MB_ICONERROR);
+	LocalFree(lpMsgBuf);
+	exit(1);
+}
+
+int CGameFramework::recvn(SOCKET s, char* buf, int len, int flags)
+{
+	int received;
+	char* ptr = buf;
+	int left = len;
+
+	// 남은 바이트가 0이면 수신 종료
+	while (left > 0)
+	{
+		received = recv(s, ptr, left, flags);
+		if (received == SOCKET_ERROR)
+		{
+			return SOCKET_ERROR;
+		}
+		else if (received == 0)
+		{
+			break;
+		}
+
+		left -= received;
+		ptr += received;
+	}
+	return (len - left);
 }
 
 //#define _WITH_PLAYER_TOP
