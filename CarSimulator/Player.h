@@ -141,8 +141,16 @@ public:
 	virtual CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed);
 	void FireBullet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, btDiscreteDynamicsWorld* pbtDynamicsWorld);
 	void EraseBullet() { m_pBullet = NULL; }
+	void InitNetworkSocket();
+
+	void err_display(char* msg);
+	void err_quit(char* msg);
+
+	int recvn(SOCKET s, char* buf, int len, int flags);
 
 	std::shared_ptr<CWheel>* GetWheels() { return m_pWheel; }
+
+	SOCKET* GetClientSocket() { return &clientSocket; }
 
 private:
 	std::shared_ptr<CWheel> m_pWheel[4];
@@ -152,6 +160,8 @@ private:
 	btRaycastVehicle* m_vehicle;
 
 	std::shared_ptr<CBullet> m_pBullet;
+
+	SOCKET clientSocket;
 
 	float m_gEngineForce = 0.f;
 
