@@ -103,7 +103,7 @@ public:
 	~CGameFramework();
 
 	bool OnCreate(HINSTANCE hInstance, HWND hMainWnd);
-	//프레임워크를 초기화하는 함수이다(주 윈도우가 생성되면 호출된다). 
+	//프레임워크를 초기화하는 함수이다(주 윈도우가 생성되면 호출된다).
 
 	void OnDestroy();
 	void CreateSwapChain();
