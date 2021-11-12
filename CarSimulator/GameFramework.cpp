@@ -395,6 +395,7 @@ DWORD WINAPI TransportData(LPVOID arg)
 			// 분기, 플레이어 조작
 			if (pRecvData.m_dType == PLAYER_STATUS)
 			{
+				pParam->pPlayer->
 			}
 			else if (pRecvData.m_dType == GAME_OVER)
 			{

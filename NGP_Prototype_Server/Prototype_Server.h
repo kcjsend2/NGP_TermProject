@@ -1,24 +1,14 @@
 #pragma once
-
-// Network
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #pragma comment(lib, "ws2_32")
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-// C++
-#include <array>
-#include <cassert>
 #include <fstream>
-#include <iostream>
-using namespace std;
-
-// DirectX
 #include <DirectXMath.h>
 #include <DirectXCollision.h>
-using namespace DirectX;
+#include <array>
+#include <iostream>
 
 // 패킷
 #define GAME_START      0b000001
@@ -38,20 +28,8 @@ struct PlayerData
     bool        m_bulletIsValid;    // 총알이 유효한지
     XMFLOAT3    m_bulletPosition;	// 총알 위치
 
-    PlayerData() : m_id{}, m_position {}, m_rotate{}, m_bulletIsValid{}, m_bulletPosition{}
+    PlayerData() : m_id{}, m_position{}, m_rotate{}, m_bulletIsValid{}, m_bulletPosition{}
     {
 
     }
 };
-
-// 함수 선언
-void err_quit(char* msg);
-void err_display(char* msg);
-int recvn(const SOCKET& socket, char* buffer, int length, int flags);
-
-void RecvType(const SOCKET& sock);
-void RecvGameStart() { }
-void RecvGameOver() { }
-void RecvPlayerMove() { }
-void RecvPlayerHit() { }
-void RecvPlayerBullet() { }
