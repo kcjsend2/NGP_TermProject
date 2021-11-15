@@ -73,6 +73,8 @@ inline void Swap(float* pfS, float* pfT) { float fTemp = *pfS; *pfS = *pfT; *pfT
 #define PLAYER_HIT 0b01000
 #define BULLET_DELETED 0b10000
 
+CRITICAL_SECTION g_cs;
+
 #pragma pack(1)
 struct PlayerData
 {
@@ -100,6 +102,8 @@ struct PlayerData
 		m_bulletPosition = bulletPosition;
 	}
 };
+
+std::array<PlayerData, 2> aOtherPlayerData;
 
 //3차원 벡터의 연산 
 namespace Vector3
