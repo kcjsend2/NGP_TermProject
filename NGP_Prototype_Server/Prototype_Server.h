@@ -17,6 +17,9 @@
 #define PLAYER_HIT 0b01000
 #define BULLET_DELETED 0b10000
 
+using namespace std;
+using namespace DirectX;
+
 #pragma pack(1)
 struct PlayerData
 {

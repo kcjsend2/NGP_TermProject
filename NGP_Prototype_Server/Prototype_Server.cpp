@@ -1,7 +1,6 @@
 #include "Prototype_Server.h"
 
-using namespace std;
-using namespace DirectX;
+
 
 array<PlayerData, 3> aPlayerData;
 CRITICAL_SECTION cs;
@@ -64,6 +63,17 @@ struct ProcessClientData_Parameter
     SOCKET sock;
     int id;
 };
+
+bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate ,XMFLOAT3 BulletPosition)
+{
+    BoundingOrientedBox BBPlayer = BoundingOrientedBox{ playerPosition, XMFLOAT3{4.5f, 1.1f, 4.5f}, XMFLOAT4{0.0f, 0.0f, 0.0f, 1.0f} };
+    BoundingOrientedBox BBBullet = BoundingOrientedBox{ BulletPosition, XMFLOAT3{1.1f, 1.1f, 1.1f}, XMFLOAT4{0.0f, 0.0f, 0.0f, 1.0f} };
+
+    BBPlayer.Transform(BBPlayer, 1.0f, XMLoadFloat3(&playerRotate), XMLoadFloat3(&playerPosition));
+    BBBullet.Transform(BBBullet, 1.0f, FXMVECTOR{}, XMLoadFloat3(&BulletPosition));
+
+    return BBPlayer.Intersects(BBBullet);
+}
 
 DWORD WINAPI ProcessClientData(LPVOID arg)
 {
