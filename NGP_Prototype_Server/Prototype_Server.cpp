@@ -90,7 +90,7 @@ DWORD WINAPI ProcessClientData(LPVOID arg)
         // 예를 들어 2번 플레이어가 1번 플레이어가 쏜 총알에 맞았을 때, 2번 플레이어가 받는 1번 플레이어의 PlayerData.bIntersected는 true가 된다.
         // 점수를 따로 기록하지 않으므로 충돌하였음을 감지하였을 때 클라이언트에서 위치 정보와 목숨 정보를 바꾸어주기만 하면 된다.
 
-        msgID = PLAYER_MOVE;
+        msgID = PLAYER_UPDATE;
         send(pParam->sock, (char*)&msgID, sizeof(int), 0);
 
         for (int i = 0; i < 3; ++i)
