@@ -22,12 +22,13 @@ int main(int argc, char* argv[])
     serveraddr.sin_port = htons(atoi(argv[2]));
     if (connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr)) == SOCKET_ERROR)
         err_display("connect()");
-
+    HANDLE hThread;
     while (TRUE)
     {
-        RecvType(sock);
+        hThread = CreateThread(NULL, 0, ProcessServerData, &sock, 0, NULL);
+        if (hThread == NULL) return 1;
     }
-
+    CloseHandle(hThread);
     closesocket(sock);
     WSACleanup();
 }
@@ -67,9 +68,10 @@ int recvn(const SOCKET& socket, char* buffer, int length, int flags)
     return length - left;
 }
 
-void RecvType(const SOCKET& sock)
+DWORD WINAPI ProcessServerData(LPVOID arg)
 {
     INT packetType;
+    SOCKET sock = (SOCKET)arg; // 임시로 설정. GameFramework에서 받아오는 sock사용할 예정.
     recvn(sock, (char*)&packetType, sizeof(packetType), 0);
 
     if (packetType && GAME_START)
@@ -90,7 +92,7 @@ void RecvType(const SOCKET& sock)
     if ((packetType && PLAYER_MOVE) || (packetType && BULLET_UPDATE))
     {
         // 1. 플레이어 정보(PlayerData) 수신
-        
+
         // PLAYER_MOVE 플래그가 설정되어 있다면
         if (packetType && PLAYER_MOVE)
         {

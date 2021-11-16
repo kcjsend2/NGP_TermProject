@@ -49,7 +49,8 @@ void err_quit(char* msg);
 void err_display(char* msg);
 int recvn(const SOCKET& socket, char* buffer, int length, int flags);
 
-void RecvType(const SOCKET& sock);
+DWORD WINAPI ProcessServerData(LPVOID);
+
 void RecvGameStart() { }
 void RecvGameOver() { }
 void RecvPlayerMove() { }
