@@ -364,107 +364,108 @@ void CGameFramework::CreateDepthStencilView()
 }
 
 
-DWORD WINAPI TransportData(LPVOID arg)
-{
-	CRITICAL_SECTION cs;
-	InitializeCriticalSection(&cs);
-
-	Thread_Parameter* pParam = (Thread_Parameter*)arg;
-
-	CVehiclePlayer* pPlayer = pParam->pPlayer;
-	SOCKET clientSock = pParam->clientSocket;
-
-	PlayerData pRecvData;
-	int msgType;
-
-	while (1)
-	{
-		EnterCriticalSection(&cs);
-
-		PlayerData pSendData{ PLAYER_STATUS, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 3, false, {0.0f, 0.0f, 0.0f}, false };
-		if (send(clientSock, (char*)&pSendData, sizeof(PlayerData), 0) == SOCKET_ERROR)
-		{
-			err_quit("send()");
-		}
-
-		for (int i = 0; i < 2; ++i)
-		{
-			ZeroMemory(&pRecvData, sizeof(PlayerData));
-			recvn(clientSock, (char*)&pRecvData, sizeof(PlayerData), 0);
-
-			// 분기, 플레이어 조작
-			if (pRecvData.m_dType == PLAYER_STATUS)
-			{
-			}
-			else if (pRecvData.m_dType == GAME_OVER)
-			{
-				break;
-			}
-		}
-
-		LeaveCriticalSection(&cs);
-	}
-
-	EnterCriticalSection(&cs);
-	closesocket(clientSock);
-	LeaveCriticalSection(&cs);
-
-	DeleteCriticalSection(&cs);
-
-	WSACleanup();
-}
+//DWORD WINAPI TransportData(LPVOID arg)
+//{
+//	CRITICAL_SECTION cs;
+//	InitializeCriticalSection(&cs);
+//
+//	Thread_Parameter* pParam = (Thread_Parameter*)arg;
+//
+//	CVehiclePlayer* pPlayer = pParam->pPlayer;
+//	SOCKET clientSock = pParam->clientSocket;
+//
+//	PlayerData pRecvData;
+//	int msgType;
+//
+//	while (1)
+//	{
+//		EnterCriticalSection(&cs);
+//
+//		PlayerData pSendData{ PLAYER_UPDATE, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 3, false, {0.0f, 0.0f, 0.0f}, false };
+//		if (send(clientSock, (char*)&pSendData, sizeof(PlayerData), 0) == SOCKET_ERROR)
+//		{
+//			err_quit("send()");
+//		}
+//
+//		for (int i = 0; i < 2; ++i)
+//		{
+//			ZeroMemory(&pRecvData, sizeof(PlayerData));
+//			recvn(clientSock, (char*)&pRecvData, sizeof(PlayerData), 0);
+//
+//			// 분기, 플레이어 조작
+//			if (pRecvData.m_dType == PLAYER_STATUS)
+//			{
+//				pParam->pPlayer->
+//			}
+//			else if (pRecvData.m_dType == GAME_OVER)
+//			{
+//				break;
+//			}
+//		}
+//
+//		LeaveCriticalSection(&cs);
+//	}
+//
+//	EnterCriticalSection(&cs);
+//	closesocket(clientSock);
+//	LeaveCriticalSection(&cs);
+//
+//	DeleteCriticalSection(&cs);
+//
+//	WSACleanup();
+//}
 
 void CGameFramework::InitNetworkSocket(CVehiclePlayer* pPlayer)
 {
-	LPWSTR* szArgList;
-	int argCount;
-	int msgType;
+	//LPWSTR* szArgList;
+	//int argCount;
+	//int msgType;
 
-	szArgList = CommandLineToArgvW(GetCommandLine(), &argCount);
+	//szArgList = CommandLineToArgvW(GetCommandLine(), &argCount);
 
-	WSADATA wsa;
+	//WSADATA wsa;
 
-	WSAStartup(MAKEWORD(2, 2), &wsa);
+	//WSAStartup(MAKEWORD(2, 2), &wsa);
 
-	// socket()
-	m_clientSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if (m_clientSocket == INVALID_SOCKET) err_quit("socket()");
+	//// socket()
+	//m_clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+	//if (m_clientSocket == INVALID_SOCKET) err_quit("socket()");
 
-	char ctext[20];
-	wcstombs(ctext, szArgList[1], wcslen(szArgList[1]) + 1);
-	const char* sAddr = ctext;
+	//char ctext[20];
+	//wcstombs(ctext, szArgList[1], wcslen(szArgList[1]) + 1);
+	//const char* sAddr = ctext;
 
-	// connect()
-	SOCKADDR_IN serveraddr;
-	ZeroMemory(&serveraddr, sizeof(serveraddr));
-	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_addr.s_addr = inet_addr(sAddr);
+	//// connect()
+	//SOCKADDR_IN serveraddr;
+	//ZeroMemory(&serveraddr, sizeof(serveraddr));
+	//serveraddr.sin_family = AF_INET;
+	//serveraddr.sin_addr.s_addr = inet_addr(sAddr);
 
-	wcstombs(ctext, szArgList[2], wcslen(szArgList[2]) + 1);
-	const char* sPort = ctext;
-	serveraddr.sin_port = htons(atoi(sPort));
-	if (connect(m_clientSocket, (SOCKADDR*)&serveraddr, sizeof(serveraddr)) == SOCKET_ERROR)
-	{
-		err_display("connect()");
-	}
+	//wcstombs(ctext, szArgList[2], wcslen(szArgList[2]) + 1);
+	//const char* sPort = ctext;
+	//serveraddr.sin_port = htons(atoi(sPort));
+	//if (connect(m_clientSocket, (SOCKADDR*)&serveraddr, sizeof(serveraddr)) == SOCKET_ERROR)
+	//{
+	//	err_display("connect()");
+	//}
 
-	std::array<PlayerData, 2> aOtherPlayerData;
+	//std::array<PlayerData, 2> aOtherPlayerData;
 
-	// 시작 신호를 기다림
-	while (1)
-	{
-		recvn(m_clientSocket, (char*)&msgType, sizeof(int), 0);
+	//// 시작 신호를 기다림
+	//while (1)
+	//{
+	//	recvn(m_clientSocket, (char*)&msgType, sizeof(int), 0);
 
-		if (msgType == GAME_START)
-		{
-			break;
-		}
-	}
-	Thread_Parameter* pParam = new Thread_Parameter;
-	pParam->clientSocket = m_clientSocket;
-	pParam->pPlayer = m_pPlayer.get();
+	//	if (msgType == GAME_START)
+	//	{
+	//		break;
+	//	}
+	//}
+	//Thread_Parameter* pParam = new Thread_Parameter;
+	//pParam->clientSocket = m_clientSocket;
+	//pParam->pPlayer = m_pPlayer.get();
 
-	CreateThread(NULL, 0, TransportData, pParam, 0, NULL);
+	//CreateThread(NULL, 0, TransportData, pParam, 0, NULL);
 }
 
 void CGameFramework::BuildObjects()

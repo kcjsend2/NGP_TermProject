@@ -1,70 +1,7 @@
-#pragma comment(lib, "ws2_32")
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <fstream>
-#include <DirectXMath.h>
-#include <DirectXCollision.h>
-#include <array>
-#include <iostream>
-
-using namespace std;
-using namespace DirectX;
-
-enum dataType
-{
-    GAME_START,
-    GAME_OVER,
-    PLAYER_STATUS
-};
+#include "Prototype_Server.h"
 
 
-// 항상 PlayerData 형식으로 데이터가 송수신된다.
-#pragma pack(1)
-struct PlayerData
-{
-    int m_dType;
-    XMFLOAT3 m_position; 	// 플레이어 위치
-    XMFLOAT3 m_rotate;		// 플레이어 회전 정보(roll, pitch, yaw)
-    int m_life;			// 플레이어의 목숨 수
-    bool m_bHasBullet;		// 총알 유무
-    XMFLOAT3 m_bulletPosition;	// 총알 위치
-    bool m_bIntersected;
 
-    PlayerData()
-    {
-        m_dType = NULL;
-        m_position = { 0.0f, 0.0f, 0.0f };
-        m_rotate = { 0.0f, 0.0f, 0.0f };
-        m_life = 0;
-        m_bHasBullet = false;
-        m_bulletPosition = { 0.0f, 0.0f, 0.0f };
-        m_bIntersected = false;
-    }
-
-    PlayerData(int Type, XMFLOAT3 Position, XMFLOAT3 rotate, int life, bool hasBullet, XMFLOAT3 bulletPosition, bool bIntersected)
-    {
-        m_dType = Type;
-        m_position = Position;
-        m_rotate = rotate;
-        m_life = life;
-        m_bHasBullet = hasBullet;
-        m_bulletPosition = bulletPosition;
-        m_bIntersected = bIntersected;
-    }
-
-    PlayerData(int Type)
-    {
-        m_dType = Type;
-        m_position = { 0.0f, 0.0f, 0.0f };
-        m_rotate = { 0.0f, 0.0f, 0.0f };
-        m_life = 0;
-        m_bHasBullet = false;
-        m_bulletPosition = { 0.0f, 0.0f, 0.0f };
-        m_bIntersected = false;
-    }
-};
 array<PlayerData, 3> aPlayerData;
 CRITICAL_SECTION cs;
 
@@ -127,14 +64,25 @@ struct ProcessClientData_Parameter
     int id;
 };
 
+bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate ,XMFLOAT3 BulletPosition)
+{
+    BoundingOrientedBox BBPlayer = BoundingOrientedBox{ playerPosition, XMFLOAT3{4.5f, 1.1f, 4.5f}, XMFLOAT4{0.0f, 0.0f, 0.0f, 1.0f} };
+    BoundingOrientedBox BBBullet = BoundingOrientedBox{ BulletPosition, XMFLOAT3{1.1f, 1.1f, 1.1f}, XMFLOAT4{0.0f, 0.0f, 0.0f, 1.0f} };
+
+    BBPlayer.Transform(BBPlayer, 1.0f, XMLoadFloat3(&playerRotate), XMLoadFloat3(&playerPosition));
+    BBBullet.Transform(BBBullet, 1.0f, FXMVECTOR{}, XMLoadFloat3(&BulletPosition));
+
+    return BBPlayer.Intersects(BBBullet);
+}
+
 DWORD WINAPI ProcessClientData(LPVOID arg)
 {
     //중간에 클라이언트가 종료되지 않는다는 가정하에 게임이 진행된다.
     ProcessClientData_Parameter* pParam = (ProcessClientData_Parameter*)arg;
     cout << pParam->sock << endl;
 
-    PlayerData startMessage(GAME_START);
-    int retval = send(pParam->sock, (char*)&startMessage, sizeof(PlayerData), 0);
+    int msgID = GAME_START;
+    int retval = send(pParam->sock, (char*)&msgID, sizeof(int), 0);
 
     if (retval == SOCKET_ERROR)
     {
@@ -144,11 +92,16 @@ DWORD WINAPI ProcessClientData(LPVOID arg)
     while (1)
     {
         EnterCriticalSection(&cs);
+
+        // 약속된 플레이어 데이터 한번에 받아서 세팅함 (위치, 회전, 총알 유무, 총알 위치 등)
         recvn(pParam->sock, (char*)&aPlayerData[pParam->id], sizeof(PlayerData), 0);
 
         // 충돌한 플레이어는 총알을 쏜 플레이어의 데이터에서 충돌 여부를 받게된다. - PlayerData.bIntersected
         // 예를 들어 2번 플레이어가 1번 플레이어가 쏜 총알에 맞았을 때, 2번 플레이어가 받는 1번 플레이어의 PlayerData.bIntersected는 true가 된다.
         // 점수를 따로 기록하지 않으므로 충돌하였음을 감지하였을 때 클라이언트에서 위치 정보와 목숨 정보를 바꾸어주기만 하면 된다.
+
+        msgID = PLAYER_UPDATE;
+        send(pParam->sock, (char*)&msgID, sizeof(int), 0);
 
         for (int i = 0; i < 3; ++i)
         {
@@ -252,10 +205,10 @@ int main(int argc, char* argv[])
     // 쓰레드 하나가 종료되었다는 것은 종료 조건을 만족했다는 것이다. 연결되어있는 모든 클라이언트들에게 종료 메시지를 보낸다.
     WaitForSingleObject(hThread[0], INFINITE);
     
-    PlayerData gameOver(GAME_OVER);
+    int msgType = GAME_OVER;
     for (int i = 0; i < 3; ++i)
     {
-        send(client_sock[i], (char*)&gameOver, sizeof(PlayerData), 0);
+        send(client_sock[i], (char*)&msgType, sizeof(PlayerData), 0);
         closesocket(client_sock[i]);
     }
 
