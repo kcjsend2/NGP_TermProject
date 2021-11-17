@@ -77,15 +77,10 @@ int main()
 
 DWORD WINAPI ProcessClientData(LPVOID arg)
 {
-    // 중간에 클라이언트가 종료되지 않는다는 가정하에 게임이 진행된다.
     ThreadFuncParam* param{ reinterpret_cast<ThreadFuncParam*>(arg) };
 
-    int msgID{ GAME_START };
-    if (send(param->sock, (char*)&msgID, sizeof(int), 0) == SOCKET_ERROR)
-    {
-        MessageBox(NULL, TEXT("게임시작 메시지 전송에 실패했습니다."), TEXT("오류"), 0);
-        return -1;
-    }
+    // 게임 시작 메시지를 송신한다.
+    SendGameStart(param);
 
     while (TRUE)
     {
@@ -94,10 +89,11 @@ DWORD WINAPI ProcessClientData(LPVOID arg)
         ///////////////////////////////////////////////
         
         // 메시지 타입을 수신한다.
-        RecvN(param->sock, (char*)&msgID, sizeof(int), 0);
+        int msg;
+        RecvN(param->sock, (char*)&msg, sizeof(int), 0);
 
         // 메시지 타입이 PLAYER_UPDATE라면 플레이어 정보 구조체를 수신한다.
-        if (msgID & PLAYER_UPDATE)
+        if (msg & PLAYER_UPDATE)
         {
             RecvN(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
 
@@ -118,7 +114,6 @@ DWORD WINAPI ProcessClientData(LPVOID arg)
         // 1번 이벤트를 신호 상태로 바꾼다.   //
         ////////////////////////////////////////
     }
-
     return 0;
 }
 
