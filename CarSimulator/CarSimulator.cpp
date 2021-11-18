@@ -81,7 +81,10 @@ DWORD WINAPI TransportData(LPVOID arg)
 
     while (1)
     {
-        PlayerData pSendData = PlayerData{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 3, false, {0.0f, 0.0f, 0.0f} };
+        EnterCriticalSection(&g_cs);
+        PlayerData pSendData = PlayerData{ gGameFramework.GetPlayerPosition(), gGameFramework.GetPlayerRotation(), 3, false, {0.0f, 0.0f, 0.0f}};
+        LeaveCriticalSection(&g_cs);
+
         if (send(clientSock, (char*)&pSendData, sizeof(PlayerData), 0) == SOCKET_ERROR)
         {
             err_quit("send()");

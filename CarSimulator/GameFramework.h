@@ -121,6 +121,22 @@ public:
 	//물리엔진 초기화
 	void BulletInit();
 
+	XMFLOAT3 GetPlayerPosition() { return m_pPlayer->GetPosition(); }
+	XMFLOAT3 GetPlayerRotation()
+	{
+		XMFLOAT4X4 transform = m_pPlayer->GetWorldTransformMatrix();
+		float pitch = XMScalarASin(-transform._32);
+
+		XMVECTOR from(XMVectorSet(transform._12, transform._31, 0.0f, 0.0f));
+		XMVECTOR to(XMVectorSet(transform._22, transform._33, 0.0f, 0.0f));
+		XMVECTOR res(XMVectorATan2(from, to));
+
+		float roll = DirectX::XMVectorGetX(res);
+		float yaw = DirectX::XMVectorGetY(res);
+
+		return XMFLOAT3(yaw, pitch, roll);
+	}
+
 	//CPU와 GPU를 동기화하는 함수이다.
 	void WaitForGpuComplete();
 

@@ -54,6 +54,8 @@ protected:
 	//플레이어에 현재 설정된 카메라이다.
 	CCamera *m_pCamera = NULL;
 
+	int m_nlife = 3;
+
 public:
 	CPlayer(int nMeshes = 1);
 	virtual ~CPlayer();
