@@ -82,8 +82,6 @@ DWORD WINAPI TransportData(LPVOID arg)
 
     while (1)
     {
-        EnterCriticalSection(&g_cs);
-
         PlayerData pSendData{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 3, false, {0.0f, 0.0f, 0.0f} };
         if (send(clientSock, (char*)&pSendData, sizeof(PlayerData), 0) == SOCKET_ERROR)
         {
@@ -99,22 +97,34 @@ DWORD WINAPI TransportData(LPVOID arg)
         // 분기, 플레이어 조작
         if ((msgType & PLAYER_UPDATE) == msgType)
         {
+            EnterCriticalSection(&g_cs);
 
+            recvn(clientSock, (char*)&aOtherPlayerData[0], sizeof(PlayerData), 0);
+            recvn(clientSock, (char*)&aOtherPlayerData[1], sizeof(PlayerData), 0);
+
+            LeaveCriticalSection(&g_cs);
         }
         if ((msgType & PLAYER_HIT) == msgType)
         {
+            EnterCriticalSection(&g_cs);
 
+            LeaveCriticalSection(&g_cs);
         }
         if ((msgType & BULLET_DELETED) == msgType)
         {
+            EnterCriticalSection(&g_cs);
 
+            LeaveCriticalSection(&g_cs);
         }
         if ((msgType & GAME_OVER) == msgType)
         {
+            EnterCriticalSection(&g_cs);
+
+            LeaveCriticalSection(&g_cs);
             break;
         }
 
-        LeaveCriticalSection(&g_cs);
+        Sleep(1);
     }
 
     closesocket(clientSock);
@@ -215,7 +225,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
         else
         {
+            EnterCriticalSection(&g_cs);
             gGameFramework.FrameAdvance();
+            LeaveCriticalSection(&g_cs);
         }
     }
     gGameFramework.OnDestroy();
