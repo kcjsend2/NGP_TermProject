@@ -136,6 +136,9 @@ public:
 
 		return XMFLOAT3(yaw, pitch, roll);
 	}
+	int GetPlayerLife() { return m_pPlayer->m_nLife; }
+	void PlayerHIt() { m_pPlayer->m_nLife--; }
+	std::shared_ptr<CBullet> GetPlayerBullet() { return m_pPlayer->GetBullet(); }
 
 	//CPU와 GPU를 동기화하는 함수이다.
 	void WaitForGpuComplete();

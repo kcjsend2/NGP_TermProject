@@ -81,8 +81,14 @@ DWORD WINAPI TransportData(LPVOID arg)
 
     while (1)
     {
+        PlayerData pSendData;
         EnterCriticalSection(&g_cs);
-        PlayerData pSendData = PlayerData{ gGameFramework.GetPlayerPosition(), gGameFramework.GetPlayerRotation(), 3, false, {0.0f, 0.0f, 0.0f}};
+        std::shared_ptr<CBullet> bullet = gGameFramework.GetPlayerBullet();
+        if(bullet == NULL)
+            pSendData = PlayerData{ gGameFramework.GetPlayerPosition(), gGameFramework.GetPlayerRotation(), gGameFramework.GetPlayerLife(), FALSE, {0, 0, 0} };
+        else
+            pSendData = PlayerData{ gGameFramework.GetPlayerPosition(), gGameFramework.GetPlayerRotation(), gGameFramework.GetPlayerLife(), TRUE, bullet->GetPosition()};
+
         LeaveCriticalSection(&g_cs);
 
         if (send(clientSock, (char*)&pSendData, sizeof(PlayerData), 0) == SOCKET_ERROR)
@@ -105,7 +111,7 @@ DWORD WINAPI TransportData(LPVOID arg)
         if ((msgType & PLAYER_HIT) == msgType)
         {
             EnterCriticalSection(&g_cs);
-
+            gGameFramework.PlayerHIt();
             LeaveCriticalSection(&g_cs);
         }
         if ((msgType & BULLET_DELETED) == msgType)

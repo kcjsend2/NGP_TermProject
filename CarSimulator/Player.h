@@ -54,8 +54,6 @@ protected:
 	//플레이어에 현재 설정된 카메라이다.
 	CCamera *m_pCamera = NULL;
 
-	int m_nlife = 3;
-
 public:
 	CPlayer(int nMeshes = 1);
 	virtual ~CPlayer();
@@ -120,6 +118,8 @@ public:
 	virtual void OnPrepareRender();
 	//플레이어의 카메라가 3인칭 카메라일 때 플레이어(메쉬)를 렌더링한다.
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera = NULL);
+
+	int m_nLife = 3;
 };
 
 class CVehiclePlayer : public CPlayer
