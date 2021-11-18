@@ -4,12 +4,6 @@
 #include "Player.h"
 #include "ShadowMap.h"
 
-struct Thread_Parameter
-{
-	CVehiclePlayer* pPlayer;
-	SOCKET clientSocket;
-};
-
 
 class CGameFramework
 {
@@ -95,8 +89,6 @@ public:
 	//마지막으로 마우스 버튼을 클릭할 때의 마우스 커서의 위치이다.
 	POINT m_ptOldCursorPos;
 
-	SOCKET m_clientSocket;
-
 
 public:
 	CGameFramework();
@@ -139,6 +131,4 @@ public:
 
 	void ChangeSwapChainState();
 	void MoveToNextFrame();
-
-	void InitNetworkSocket(CVehiclePlayer* pPlayer);
 };
