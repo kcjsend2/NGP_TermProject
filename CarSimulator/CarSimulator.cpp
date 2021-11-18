@@ -77,22 +77,17 @@ DWORD WINAPI TransportData(LPVOID arg)
 {
     SOCKET clientSock = (SOCKET)arg;
 
-    PlayerData pRecvData;
     int msgType;
 
     while (1)
     {
-        PlayerData pSendData{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 3, false, {0.0f, 0.0f, 0.0f} };
+        PlayerData pSendData = PlayerData{ {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 3, false, {0.0f, 0.0f, 0.0f} };
         if (send(clientSock, (char*)&pSendData, sizeof(PlayerData), 0) == SOCKET_ERROR)
         {
             err_quit("send()");
         }
 
         recvn(clientSock, (char*)&msgType, sizeof(int), 0);
-
-        ZeroMemory(&pRecvData, sizeof(PlayerData));
-        recvn(clientSock, (char*)&pRecvData, sizeof(PlayerData), 0);
-
 
         // 분기, 플레이어 조작
         if ((msgType & PLAYER_UPDATE) == msgType)
