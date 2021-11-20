@@ -149,7 +149,9 @@ void SendPlayerInfo(ThreadFuncParam* param)
     // 플레이어 정보 구조체 송신
     for (int i = 0; i < 3; ++i)
     {
-        if (i == param->id) continue;
+        if (i == param->id)
+            continue;
+
         send(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
     }
 }
@@ -158,14 +160,12 @@ void SendGameStart(ThreadFuncParam* param)
 {
     // 메시지 송신
     int msg{ GAME_START };
-    send(param->sock, (char*)&msg), sizeof(int), 0);
+    send(param->sock, (char*)&msg, sizeof(int), 0);
    
     XMFLOAT3 SpawnPosition[3]{ {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {2.0f, 2.0f, 2.0f} };  // 맨 처음 스폰 좌표 설정. 어디로 할 지 정해줘야 할 듯. 그냥 임의의 숫자 써둠
 
     //스폰 좌표 송신
-    for (int i = 0; i < 3; ++i)
-        if(param->id==i)
-            send(param->sock, (char*)&SpawnPosition[i], sizeof(XMFLOAT3), 0);
+    send(param->sock, (char*)&SpawnPosition[param->id], sizeof(XMFLOAT3), 0);
 }
 
 bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 BulletPosition)
