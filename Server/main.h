@@ -56,7 +56,7 @@ struct ThreadFuncParam
 void RecvPlayerInfo(ThreadFuncParam* param);
 
 // 송신 함수
-void SendGameStart(ThreadFuncParam* param) { }
+void SendGameStart(ThreadFuncParam* param);
 void SendGameOver(ThreadFuncParam* param) { }
 void SendPlayerInfo(ThreadFuncParam* param);
 void SendBulletDeleted(ThreadFuncParam* param) { }

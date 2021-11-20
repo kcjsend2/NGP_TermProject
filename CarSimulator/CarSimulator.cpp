@@ -72,6 +72,36 @@ int recvn(SOCKET s, char* buf, int len, int flags)
     }
     return (len - left);
 }
+void SendPlayerInfo(const SOCKET& sock)
+{
+    PlayerData pSendData;
+    std::shared_ptr<CBullet> bullet = gGameFramework.GetPlayerBullet();
+    if (bullet == NULL)
+        pSendData = PlayerData{ gGameFramework.GetPlayerPosition(), gGameFramework.GetPlayerRotation(), gGameFramework.GetPlayerLife(), FALSE, {0, 0, 0} };
+    else
+        pSendData = PlayerData{ gGameFramework.GetPlayerPosition(), gGameFramework.GetPlayerRotation(), gGameFramework.GetPlayerLife(), TRUE, bullet->GetPosition() };
+
+    if(send(sock, (char*)&pSendData, sizeof(PlayerData), 0) == SOCKET_ERROR)
+    {
+        err_quit("send()");
+    }
+}
+
+void RecvGameStart(const SOCKET& sock)
+{
+    XMFLOAT3 StartPos;
+    recvn(sock, (char*)&StartPos, sizeof(XMFLOAT3), 0);
+    gGameFramework.m_pPlayer->SetPosition(StartPos);
+    //StartPos를 어디로 할 지..?
+}
+
+void RecvPlayerInfo(const SOCKET& sock)
+{
+    //ZeroMemory()??
+    recvn(sock, (char*)&aOtherPlayerData[0], sizeof(PlayerData), 0);
+    recvn(sock, (char*)&aOtherPlayerData[1], sizeof(PlayerData), 0);
+}
+
 
 DWORD WINAPI TransportData(LPVOID arg)
 {
@@ -79,27 +109,11 @@ DWORD WINAPI TransportData(LPVOID arg)
 
     int msgType;
 
-    // 시작 신호를 기다림
-    while (1)
-    {
-        recvn(clientSock, (char*)&msgType, sizeof(int), 0);
-
-        if ((msgType & GAME_START) == msgType)
-        {
-            break;
-        }
-    }
-
     while (1)
     {
         PlayerData pSendData;
         EnterCriticalSection(&g_cs);
-        std::shared_ptr<CBullet> bullet = gGameFramework.GetPlayerBullet();
-        if(bullet == NULL)
-            pSendData = PlayerData{ gGameFramework.GetPlayerPosition(), gGameFramework.GetPlayerRotation(), gGameFramework.GetPlayerLife(), FALSE, {0, 0, 0} };
-        else
-            pSendData = PlayerData{ gGameFramework.GetPlayerPosition(), gGameFramework.GetPlayerRotation(), gGameFramework.GetPlayerLife(), TRUE, bullet->GetPosition()};
-
+        SendPlayerInfo(clientSock);
         LeaveCriticalSection(&g_cs);
 
         if (send(clientSock, (char*)&pSendData, sizeof(PlayerData), 0) == SOCKET_ERROR)
@@ -110,31 +124,32 @@ DWORD WINAPI TransportData(LPVOID arg)
         recvn(clientSock, (char*)&msgType, sizeof(int), 0);
 
         // 분기, 플레이어 조작
-        if (msgType & PLAYER_UPDATE)
+        if ((msgType & PLAYER_UPDATE) == msgType)
         {
             EnterCriticalSection(&g_cs);
-
-            recvn(clientSock, (char*)&g_otherPlayersData[0], sizeof(PlayerData), 0);
-            recvn(clientSock, (char*)&g_otherPlayersData[1], sizeof(PlayerData), 0);
-
+            
+            //ZeroMemory()??
+             //RecvPlayerInfo(0); 로 안 나누는 게 맞는 지 잘 모르겠음. 일단 계획서 살짝 고침.
+            RecvPlayerInfo(clientSock);
             LeaveCriticalSection(&g_cs);
         }
-        if (msgType & PLAYER_HIT)
+        if ((msgType & PLAYER_HIT) == msgType)
         {
             EnterCriticalSection(&g_cs);
             gGameFramework.PlayerHIt();
             LeaveCriticalSection(&g_cs);
         }
-        if (msgType & BULLET_DELETED)
+        if ((msgType & BULLET_DELETED) == msgType)
         {
             EnterCriticalSection(&g_cs);
-            gGameFramework.m_pPlayer->EraseBullet();
+            gGameFramework.m_pPlayer->EraseBullet(); // EraseBullet이 총알 없는 상태로 만드는게 맞나?? 따로 Is_Bullet을 설정할 지 고민.
             LeaveCriticalSection(&g_cs);
         }
-        if (msgType & GAME_OVER)
+        if ((msgType & GAME_OVER) == msgType)
         {
-            int result;
-            recvn(clientSock, (char*)&result, sizeof(int), 0);
+            EnterCriticalSection(&g_cs);
+            //recvn(clientSock, (char*)&/*blabla == 승리여부 변수*/, sizeof(/*blabla*/), 0);
+            LeaveCriticalSection(&g_cs);
             break;
         }
 
@@ -184,6 +199,18 @@ void InitNetworkSocket()
     if (connect(clientSocket, (SOCKADDR*)&serveraddr, sizeof(serveraddr)) == SOCKET_ERROR)
     {
         err_display("connect()");
+    }
+
+    // 시작 신호를 기다림
+    while (1)
+    {
+        recvn(clientSocket, (char*)&msgType, sizeof(int), 0);
+
+        if ((msgType & GAME_START) == msgType)
+        {
+            //RecvGameStart(clientSocket);
+            break;
+        }
     }
     CreateThread(NULL, 0, TransportData, &clientSocket, 0, NULL);
 }
