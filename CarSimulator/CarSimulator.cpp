@@ -79,6 +79,17 @@ DWORD WINAPI TransportData(LPVOID arg)
 
     int msgType;
 
+    // 시작 신호를 기다림
+    while (1)
+    {
+        recvn(clientSock, (char*)&msgType, sizeof(int), 0);
+
+        if ((msgType & GAME_START) == msgType)
+        {
+            break;
+        }
+    }
+
     while (1)
     {
         PlayerData pSendData;
@@ -123,7 +134,7 @@ DWORD WINAPI TransportData(LPVOID arg)
         if (msgType & GAME_OVER)
         {
             int result;
-            recvn(clientSock, (char*)result, sizeof(int), 0);
+            recvn(clientSock, (char*)&result, sizeof(int), 0);
             break;
         }
 
@@ -173,17 +184,6 @@ void InitNetworkSocket()
     if (connect(clientSocket, (SOCKADDR*)&serveraddr, sizeof(serveraddr)) == SOCKET_ERROR)
     {
         err_display("connect()");
-    }
-
-    // 시작 신호를 기다림
-    while (1)
-    {
-        recvn(clientSocket, (char*)&msgType, sizeof(int), 0);
-
-        if ((msgType & GAME_START) == msgType)
-        {
-            break;
-        }
     }
     CreateThread(NULL, 0, TransportData, &clientSocket, 0, NULL);
 }
