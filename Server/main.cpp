@@ -79,6 +79,9 @@ void RecvPlayerInfo(ThreadFuncParam* param)
 {
     RecvN(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
 
+    XMFLOAT3 playerPos = g_players[param->id].m_position;
+
+    printf("%d번 플레이어 위치 : %f, %f, %f\n", param->id, playerPos.x, playerPos.y, playerPos.z);
     ///////////////////////
     // 충돌 검사를 한다. //
     ///////////////////////
@@ -166,6 +169,8 @@ void SendGameStart(ThreadFuncParam* param)
 
     //스폰 좌표 송신
     send(param->sock, (char*)&SpawnPosition[param->id], sizeof(XMFLOAT3), 0);
+
+    printf("%d번 쓰레드 게임 시작 송신\n", param->id);
 }
 
 bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 BulletPosition)

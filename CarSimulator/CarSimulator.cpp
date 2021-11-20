@@ -117,7 +117,7 @@ DWORD WINAPI TransportData(LPVOID arg)
 
         if (msgType & GAME_START)
         {
-            //RecvGameStart(clientSocket);
+            RecvGameStart(clientSock);
             break;
         }
     }
