@@ -117,14 +117,13 @@ DWORD WINAPI TransportData(LPVOID arg)
         if (msgType & BULLET_DELETED)
         {
             EnterCriticalSection(&g_cs);
-
+            gGameFramework.m_pPlayer->EraseBullet();
             LeaveCriticalSection(&g_cs);
         }
         if (msgType & GAME_OVER)
         {
-            EnterCriticalSection(&g_cs);
-
-            LeaveCriticalSection(&g_cs);
+            int result;
+            recvn(clientSock, (char*)result, sizeof(int), 0);
             break;
         }
 
