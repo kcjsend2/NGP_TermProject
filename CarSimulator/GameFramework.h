@@ -131,8 +131,8 @@ public:
 		XMVECTOR to(XMVectorSet(transform._22, transform._33, 0.0f, 0.0f));
 		XMVECTOR res(XMVectorATan2(from, to));
 
-		float roll = DirectX::XMVectorGetX(res);
-		float yaw = DirectX::XMVectorGetY(res);
+		float roll = XMVectorGetX(res);
+		float yaw = XMVectorGetY(res);
 
 		return XMFLOAT3(yaw, pitch, roll);
 	}
