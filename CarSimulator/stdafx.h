@@ -67,13 +67,11 @@ inline bool IsEqual(float fA, float fB) { return(::IsZero(fA - fB)); }
 inline float InverseSqrt(float fValue) { return 1.0f / sqrtf(fValue); }
 inline void Swap(float* pfS, float* pfT) { float fTemp = *pfS; *pfS = *pfT; *pfT = fTemp; }
 
-#define GAME_START 0b00001
-#define GAME_OVER 0b00010
-#define PLAYER_UPDATE 0b00100
-#define PLAYER_HIT 0b01000
-#define BULLET_DELETED 0b10000
-
-CRITICAL_SECTION g_cs;
+#define GAME_START		0b00001
+#define GAME_OVER		0b00010
+#define PLAYER_UPDATE	0b00100
+#define PLAYER_HIT		0b01000
+#define BULLET_DELETED	0b10000
 
 #pragma pack(1)
 struct PlayerData
@@ -103,7 +101,9 @@ struct PlayerData
 	}
 };
 
-std::array<PlayerData, 2> aOtherPlayerData;
+// 전역 변수 선언
+extern CRITICAL_SECTION g_cs;
+extern std::array<PlayerData, 2> g_otherPlayersData;
 
 //3차원 벡터의 연산 
 namespace Vector3

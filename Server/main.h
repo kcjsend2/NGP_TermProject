@@ -1,5 +1,7 @@
 #pragma once
 
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+
 // Network
 #pragma comment(lib, "ws2_32")
 #include <winsock2.h>
@@ -50,14 +52,20 @@ struct ThreadFuncParam
     SOCKET  sock;
 };
 
+// 수신 함수
+void RecvPlayerInfo(ThreadFuncParam* param);
+
 // 송신 함수
 void SendGameStart(ThreadFuncParam* param) { }
 void SendGameOver(ThreadFuncParam* param) { }
 void SendPlayerInfo(ThreadFuncParam* param);
 void SendBulletDeleted(ThreadFuncParam* param) { }
 
+// 쓰레드 함수
+DWORD WINAPI ProcessClientData(LPVOID arg);
+
 // 그 외 함수
 int RecvN(const SOCKET& socket, char* buffer, int length, int flags);
-BoundingOrientedBox GetBoundingBox(INT id) { }
+BoundingOrientedBox GetBoundingBox(INT id) { return {}; }
 bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 BulletPosition);
-bool isGameOver() { }
+bool isGameOver() { return false; }

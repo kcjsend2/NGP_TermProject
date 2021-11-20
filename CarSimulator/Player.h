@@ -135,13 +135,13 @@ private:
 public:
 	CVehiclePlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, btAlignedObjectArray<btCollisionShape*>& btCollisionShapes, btDiscreteDynamicsWorld* pbtDynamicsWorld, int nMeshes = 5);
 	virtual ~CVehiclePlayer();
-	std::shared_ptr<CBullet> GetBullet() { return m_pBullet; };
+
 	virtual void Update(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fTimeElapsed, btDiscreteDynamicsWorld* pbtDynamicsWorld, DWORD dwBehave);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	virtual CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed);
 	void FireBullet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, btDiscreteDynamicsWorld* pbtDynamicsWorld);
 	void EraseBullet() { m_pBullet = NULL; }
-	
+	std::shared_ptr<CBullet> GetBullet() { return m_pBullet; };
 	std::shared_ptr<CWheel>* GetWheels() { return m_pWheel; }
 
 private:
@@ -166,4 +166,11 @@ private:
 	float m_steeringClamp = 0.1f;
 	float m_wheelRadius = 0.5f;
 	float m_wheelWidth = 0.4f;
+
+// 게임, 네트워크와 관련된 변수와 함수는 아래에 작성한다.
+private:
+	int m_life = 3;
+
+public:
+	int GetLife() const { return m_life; }
 };

@@ -75,6 +75,22 @@ int main()
     WSACleanup();
 }
 
+void RecvPlayerInfo(ThreadFuncParam* param)
+{
+    RecvN(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
+
+    ///////////////////////
+    // 충돌 검사를 한다. //
+    ///////////////////////
+
+    ///////////////////////////
+    // 게임 종료를 체크한다. //
+    ///////////////////////////
+
+    // 다른 플레이어에게 이 플레이어의 정보를 송신한다.
+    SendPlayerInfo(param);
+}
+
 DWORD WINAPI ProcessClientData(LPVOID arg)
 {
     ThreadFuncParam* param{ reinterpret_cast<ThreadFuncParam*>(arg) };
@@ -95,18 +111,7 @@ DWORD WINAPI ProcessClientData(LPVOID arg)
         // 메시지 타입이 PLAYER_UPDATE라면 플레이어 정보 구조체를 수신한다.
         if (msg & PLAYER_UPDATE)
         {
-            RecvN(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
-
-            ///////////////////////
-            // 충돌 검사를 한다. //
-            ///////////////////////
-
-            ///////////////////////////
-            // 게임 종료를 체크한다. //
-            ///////////////////////////
-
-            // 다른 플레이어에게 이 플레이어의 정보를 송신한다.
-            SendPlayerInfo(param);
+            RecvPlayerInfo(param);
         }
 
         ////////////////////////////////////////
@@ -154,8 +159,8 @@ bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOA
     BoundingOrientedBox BBPlayer{ playerPosition, XMFLOAT3{ 4.5f, 1.1f, 4.5f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };
     BoundingOrientedBox BBBullet{ BulletPosition, XMFLOAT3{ 1.1f, 1.1f, 1.1f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };
 
-    BBPlayer.Transform(BBPlayer, 1.0f, XMLoadFloat3(&playerRotate), XMLoadFloat3(&playerPosition));
-    BBBullet.Transform(BBBullet, 1.0f, FXMVECTOR{}, XMLoadFloat3(&BulletPosition));
+    BBPlayer.Transform(BBPlayer, 1.0f, XMLoadFloat3(&playerRotate), {});
+    BBBullet.Transform(BBBullet, 1.0f, {}, {});
 
     return BBPlayer.Intersects(BBBullet);
 }
