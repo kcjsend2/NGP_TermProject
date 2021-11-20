@@ -4,11 +4,6 @@
 #include "Player.h"
 #include "ShadowMap.h"
 
-struct Thread_Parameter
-{
-	CVehiclePlayer* pPlayer;
-	SOCKET clientSocket;
-};
 
 class CGameFramework
 {
@@ -93,6 +88,8 @@ public:
 	//마지막으로 마우스 버튼을 클릭할 때의 마우스 커서의 위치이다.
 	POINT m_ptOldCursorPos;
 
+
+
 public:
 	CGameFramework();
 	~CGameFramework();
@@ -124,6 +121,25 @@ public:
 	//물리엔진 초기화
 	void BulletInit();
 
+	XMFLOAT3 GetPlayerPosition() { return m_pPlayer->GetPosition(); }
+	XMFLOAT3 GetPlayerRotation()
+	{
+		XMFLOAT4X4 transform = m_pPlayer->GetWorldTransformMatrix();
+		float pitch = XMScalarASin(-transform._32);
+
+		XMVECTOR from(XMVectorSet(transform._12, transform._31, 0.0f, 0.0f));
+		XMVECTOR to(XMVectorSet(transform._22, transform._33, 0.0f, 0.0f));
+		XMVECTOR res(XMVectorATan2(from, to));
+
+		float roll = XMVectorGetX(res);
+		float yaw = XMVectorGetY(res);
+
+		return XMFLOAT3(yaw, pitch, roll);
+	}
+	int GetPlayerLife() { return m_pPlayer->m_nLife; }
+	void PlayerHIt() { m_pPlayer->m_nLife--; }
+	std::shared_ptr<CBullet> GetPlayerBullet() { return m_pPlayer->GetBullet(); }
+
 	//CPU와 GPU를 동기화하는 함수이다.
 	void WaitForGpuComplete();
 
@@ -140,6 +156,6 @@ private:
 	SOCKET m_clientSocket;
 
 public:
-	void InitNetworkSocket(CVehiclePlayer* pPlayer);
+	void InitNetworkSocket(CVehiclePlayer* pPlayer) { }
 	void SendPlayerInfo();
 };
