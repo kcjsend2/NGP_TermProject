@@ -73,7 +73,6 @@ void CPlayer::Move(DWORD dwDirection, float fDistance, bool bUpdateVelocity)
 	}
 }
 
-
 void CPlayer::Move(XMFLOAT3& xmf3Shift, bool bUpdateVelocity)
 {
 	//bUpdateVelocity가 참이면 플레이어를 이동하지 않고 속도 벡터를 변경한다.

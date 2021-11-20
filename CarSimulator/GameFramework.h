@@ -79,7 +79,6 @@ private:
 
 	std::unique_ptr<CShadowMap> m_pShadowMap[3];
 
-
 public:
 	CCamera* m_pCamera = NULL;
 
@@ -88,6 +87,7 @@ public:
 
 	//마지막으로 마우스 버튼을 클릭할 때의 마우스 커서의 위치이다.
 	POINT m_ptOldCursorPos;
+
 
 
 public:
@@ -150,4 +150,12 @@ public:
 
 	void ChangeSwapChainState();
 	void MoveToNextFrame();
+
+// 게임, 네트워크와 관련된 변수와 함수는 아래에 작성한다.
+private:
+	SOCKET m_clientSocket;
+
+public:
+	void InitNetworkSocket(CVehiclePlayer* pPlayer) { }
+	void SendPlayerInfo();
 };

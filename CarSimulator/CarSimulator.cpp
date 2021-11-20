@@ -103,8 +103,8 @@ DWORD WINAPI TransportData(LPVOID arg)
         {
             EnterCriticalSection(&g_cs);
 
-            recvn(clientSock, (char*)&aOtherPlayerData[0], sizeof(PlayerData), 0);
-            recvn(clientSock, (char*)&aOtherPlayerData[1], sizeof(PlayerData), 0);
+            recvn(clientSock, (char*)&g_otherPlayersData[0], sizeof(PlayerData), 0);
+            recvn(clientSock, (char*)&g_otherPlayersData[1], sizeof(PlayerData), 0);
 
             LeaveCriticalSection(&g_cs);
         }

@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31911.196
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CarSimulator", "CarSimulator\CarSimulator.vcxproj", "{A47EE9D7-846F-4FDB-B565-48F3E58DB87C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NGP_Prototype_Server", "NGP_Prototype_Server\NGP_Prototype_Server.vcxproj", "{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server", "Server\Server.vcxproj", "{D380BEA4-035E-41EF-8EFE-69356D723D64}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,14 +23,14 @@ Global
 		{A47EE9D7-846F-4FDB-B565-48F3E58DB87C}.Release|x64.Build.0 = Release|x64
 		{A47EE9D7-846F-4FDB-B565-48F3E58DB87C}.Release|x86.ActiveCfg = Release|Win32
 		{A47EE9D7-846F-4FDB-B565-48F3E58DB87C}.Release|x86.Build.0 = Release|Win32
-		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Debug|x64.ActiveCfg = Debug|x64
-		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Debug|x64.Build.0 = Debug|x64
-		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Debug|x86.ActiveCfg = Debug|Win32
-		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Debug|x86.Build.0 = Debug|Win32
-		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Release|x64.ActiveCfg = Release|x64
-		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Release|x64.Build.0 = Release|x64
-		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Release|x86.ActiveCfg = Release|Win32
-		{FCB7CA42-8C29-4349-81C1-C1E84C40C1C5}.Release|x86.Build.0 = Release|Win32
+		{D380BEA4-035E-41EF-8EFE-69356D723D64}.Debug|x64.ActiveCfg = Debug|x64
+		{D380BEA4-035E-41EF-8EFE-69356D723D64}.Debug|x64.Build.0 = Debug|x64
+		{D380BEA4-035E-41EF-8EFE-69356D723D64}.Debug|x86.ActiveCfg = Debug|Win32
+		{D380BEA4-035E-41EF-8EFE-69356D723D64}.Debug|x86.Build.0 = Debug|Win32
+		{D380BEA4-035E-41EF-8EFE-69356D723D64}.Release|x64.ActiveCfg = Release|x64
+		{D380BEA4-035E-41EF-8EFE-69356D723D64}.Release|x64.Build.0 = Release|x64
+		{D380BEA4-035E-41EF-8EFE-69356D723D64}.Release|x86.ActiveCfg = Release|Win32
+		{D380BEA4-035E-41EF-8EFE-69356D723D64}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
