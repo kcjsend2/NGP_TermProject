@@ -91,15 +91,16 @@ void RecvGameStart(const SOCKET& sock)
 {
     XMFLOAT3 StartPos;
     recvn(sock, (char*)&StartPos, sizeof(XMFLOAT3), 0);
-    gGameFramework.m_pPlayer->SetPosition(StartPos);
-    //StartPos를 어디로 할 지..?
+
+    EnterCriticalSection(&g_cs);
+    //gGameFramework.m_pPlayer->SetPosition(StartPos);
+    LeaveCriticalSection(&g_cs);
 }
 
 void RecvPlayerInfo(const SOCKET& sock)
 {
-    //ZeroMemory()??
-    recvn(sock, (char*)&aOtherPlayerData[0], sizeof(PlayerData), 0);
-    recvn(sock, (char*)&aOtherPlayerData[1], sizeof(PlayerData), 0);
+    recvn(sock, (char*)&g_otherPlayersData[0], sizeof(PlayerData), 0);
+    recvn(sock, (char*)&g_otherPlayersData[1], sizeof(PlayerData), 0);
 }
 
 
@@ -108,6 +109,18 @@ DWORD WINAPI TransportData(LPVOID arg)
     SOCKET clientSock = (SOCKET)arg;
 
     int msgType;
+
+    // 시작 신호를 기다림
+    while (1)
+    {
+        recvn(clientSock, (char*)&msgType, sizeof(int), 0);
+
+        if (msgType & GAME_START)
+        {
+            //RecvGameStart(clientSocket);
+            break;
+        }
+    }
 
     while (1)
     {
@@ -124,28 +137,28 @@ DWORD WINAPI TransportData(LPVOID arg)
         recvn(clientSock, (char*)&msgType, sizeof(int), 0);
 
         // 분기, 플레이어 조작
-        if ((msgType & PLAYER_UPDATE) == msgType)
+        if (msgType & PLAYER_UPDATE)
         {
             EnterCriticalSection(&g_cs);
             
             //ZeroMemory()??
-             //RecvPlayerInfo(0); 로 안 나누는 게 맞는 지 잘 모르겠음. 일단 계획서 살짝 고침.
+            //RecvPlayerInfo(0); 로 안 나누는 게 맞는 지 잘 모르겠음. 일단 계획서 살짝 고침.
             RecvPlayerInfo(clientSock);
             LeaveCriticalSection(&g_cs);
         }
-        if ((msgType & PLAYER_HIT) == msgType)
+        if (msgType & PLAYER_HIT)
         {
             EnterCriticalSection(&g_cs);
             gGameFramework.PlayerHIt();
             LeaveCriticalSection(&g_cs);
         }
-        if ((msgType & BULLET_DELETED) == msgType)
+        if (msgType & BULLET_DELETED)
         {
             EnterCriticalSection(&g_cs);
-            gGameFramework.m_pPlayer->EraseBullet(); // EraseBullet이 총알 없는 상태로 만드는게 맞나?? 따로 Is_Bullet을 설정할 지 고민.
+            gGameFramework.m_pPlayer->EraseBullet();
             LeaveCriticalSection(&g_cs);
         }
-        if ((msgType & GAME_OVER) == msgType)
+        if (msgType & GAME_OVER)
         {
             EnterCriticalSection(&g_cs);
             //recvn(clientSock, (char*)&/*blabla == 승리여부 변수*/, sizeof(/*blabla*/), 0);
@@ -153,7 +166,7 @@ DWORD WINAPI TransportData(LPVOID arg)
             break;
         }
 
-        Sleep(1);
+        Sleep(0.1f);
     }
 
     closesocket(clientSock);
@@ -201,17 +214,6 @@ void InitNetworkSocket()
         err_display("connect()");
     }
 
-    // 시작 신호를 기다림
-    while (1)
-    {
-        recvn(clientSocket, (char*)&msgType, sizeof(int), 0);
-
-        if ((msgType & GAME_START) == msgType)
-        {
-            //RecvGameStart(clientSocket);
-            break;
-        }
-    }
     CreateThread(NULL, 0, TransportData, &clientSocket, 0, NULL);
 }
 
@@ -258,6 +260,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             EnterCriticalSection(&g_cs);
             gGameFramework.FrameAdvance();
             LeaveCriticalSection(&g_cs);
+            Sleep(0.1f);
         }
     }
     gGameFramework.OnDestroy();
