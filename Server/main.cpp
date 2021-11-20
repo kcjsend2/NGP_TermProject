@@ -45,7 +45,7 @@ int main()
     {
         addrlen = sizeof(SOCKADDR);
         clientSock[i] = accept(sock, (SOCKADDR*)&clientAddr, &addrlen);
-        if (clientSock[i] == INVALID_SOCKET)
+        if (clientSock[i] == INVALID_SOCKET) 
         {
             --i;
             continue;

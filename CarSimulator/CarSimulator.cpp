@@ -106,7 +106,7 @@ void RecvPlayerInfo(const SOCKET& sock)
 
 DWORD WINAPI TransportData(LPVOID arg)
 {
-    SOCKET clientSock = (SOCKET)arg;
+    SOCKET clientSock = *(SOCKET*)arg;
 
     int msgType;
 
