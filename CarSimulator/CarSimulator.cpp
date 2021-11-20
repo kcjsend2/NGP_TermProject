@@ -129,6 +129,12 @@ DWORD WINAPI TransportData(LPVOID arg)
         SendPlayerInfo(clientSock);
         LeaveCriticalSection(&g_cs);
 
+        int sendMsg = PLAYER_UPDATE;
+        if (send(clientSock, (char*)&sendMsg, sizeof(int), 0) == SOCKET_ERROR)
+        {
+            err_quit("send()");
+        }
+
         if (send(clientSock, (char*)&pSendData, sizeof(PlayerData), 0) == SOCKET_ERROR)
         {
             err_quit("send()");

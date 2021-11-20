@@ -110,11 +110,14 @@ DWORD WINAPI ProcessClientData(LPVOID arg)
         // 메시지 타입을 수신한다.
         int msg;
         RecvN(param->sock, (char*)&msg, sizeof(int), 0);
+        printf("%d번 쓰레드 메시지 수신, 메시지 ID: %d\n", param->id, msg);
+
 
         // 메시지 타입이 PLAYER_UPDATE라면 플레이어 정보 구조체를 수신한다.
         if (msg & PLAYER_UPDATE)
         {
             RecvPlayerInfo(param);
+            printf("%d번 쓰레드 플레이어 정보 수신\n", param->id);
         }
 
         ////////////////////////////////////////
