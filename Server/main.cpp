@@ -158,7 +158,7 @@ void SendPlayerInfo(ThreadFuncParam* param)
         if (i == param->id)
             continue;
 
-        send(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
+        send(param->sock, (char*)&g_players[i], sizeof(PlayerData), 0);
     }
 }
 

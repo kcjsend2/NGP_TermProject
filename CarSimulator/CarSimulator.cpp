@@ -108,7 +108,7 @@ DWORD WINAPI TransportData(LPVOID arg)
 {
     SOCKET clientSock = *(SOCKET*)arg;
 
-    int msgType;
+    int msgType = 0;
 
     // 시작 신호를 기다림
     while (1)
@@ -125,6 +125,7 @@ DWORD WINAPI TransportData(LPVOID arg)
     while (1)
     {
         PlayerData pSendData;
+
         EnterCriticalSection(&g_cs);
         SendPlayerInfo(clientSock);
         LeaveCriticalSection(&g_cs);
