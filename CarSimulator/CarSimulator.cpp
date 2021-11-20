@@ -99,7 +99,7 @@ DWORD WINAPI TransportData(LPVOID arg)
         recvn(clientSock, (char*)&msgType, sizeof(int), 0);
 
         // 분기, 플레이어 조작
-        if ((msgType & PLAYER_UPDATE) == msgType)
+        if (msgType & PLAYER_UPDATE)
         {
             EnterCriticalSection(&g_cs);
 
@@ -108,19 +108,19 @@ DWORD WINAPI TransportData(LPVOID arg)
 
             LeaveCriticalSection(&g_cs);
         }
-        if ((msgType & PLAYER_HIT) == msgType)
+        if (msgType & PLAYER_HIT)
         {
             EnterCriticalSection(&g_cs);
             gGameFramework.PlayerHIt();
             LeaveCriticalSection(&g_cs);
         }
-        if ((msgType & BULLET_DELETED) == msgType)
+        if (msgType & BULLET_DELETED)
         {
             EnterCriticalSection(&g_cs);
 
             LeaveCriticalSection(&g_cs);
         }
-        if ((msgType & GAME_OVER) == msgType)
+        if (msgType & GAME_OVER)
         {
             EnterCriticalSection(&g_cs);
 
