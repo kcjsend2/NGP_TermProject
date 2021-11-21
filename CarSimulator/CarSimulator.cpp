@@ -93,7 +93,7 @@ void RecvGameStart(const SOCKET& sock)
     recvn(sock, (char*)&StartPos, sizeof(XMFLOAT3), 0);
 
     EnterCriticalSection(&g_cs);
-    //gGameFramework.m_pPlayer->SetPosition(StartPos);
+    gGameFramework.m_pPlayer->SetRigidBodyPosition(StartPos);
     LeaveCriticalSection(&g_cs);
 }
 

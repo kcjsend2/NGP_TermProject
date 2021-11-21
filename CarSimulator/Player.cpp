@@ -623,6 +623,14 @@ void CVehiclePlayer::FireBullet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandL
 	m_pBullet = std::make_shared<CBullet>(pd3dDevice, pd3dCommandList, m_xmf3Position, m_vehicle->getForwardVector(), pbtDynamicsWorld);
 }
 
+void CVehiclePlayer::SetRigidBodyPosition(XMFLOAT3 xmf3Position)
+{
+	btTransform btCenterOfMassTransform;
+	btCenterOfMassTransform.setIdentity();
+	btCenterOfMassTransform.setOrigin(btVector3(xmf3Position.x, xmf3Position.y, xmf3Position.z));
+	m_vehicle->getRigidBody()->setCenterOfMassTransform(btCenterOfMassTransform);
+}
+
 CVehiclePlayer::CWheel::CWheel(std::shared_ptr<CMeshFileRead> pWheelMesh)
 {
 	SetMaterial(XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f), XMFLOAT3(0.3f, 0.3f, 0.3f), 0.0f);

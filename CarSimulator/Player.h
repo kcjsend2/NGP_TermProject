@@ -145,6 +145,7 @@ public:
 	void EraseBullet() { m_pBullet = NULL; }
 	std::shared_ptr<CBullet> GetBullet() { return m_pBullet; };
 	std::shared_ptr<CWheel>* GetWheels() { return m_pWheel; }
+	void SetRigidBodyPosition(XMFLOAT3 xmf3Position);
 
 private:
 	std::shared_ptr<CWheel> m_pWheel[4];
