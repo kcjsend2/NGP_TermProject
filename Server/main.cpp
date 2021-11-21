@@ -77,7 +77,9 @@ int main()
 
 void RecvPlayerInfo(ThreadFuncParam* param)
 {
-    RecvN(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
+    PlayerData playerData;
+    RecvN(param->sock, (char*)&playerData, sizeof(PlayerData), 0);
+    g_players[param->id] = playerData;
 
     XMFLOAT3 playerPos = g_players[param->id].m_position;
 

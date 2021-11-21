@@ -127,22 +127,15 @@ DWORD WINAPI TransportData(LPVOID arg)
 
     while (1)
     {
-        PlayerData pSendData;
-
-        EnterCriticalSection(&g_cs);
-        SendPlayerInfo(clientSock);
-        LeaveCriticalSection(&g_cs);
-
         int sendMsg = PLAYER_UPDATE;
         if (send(clientSock, (char*)&sendMsg, sizeof(int), 0) == SOCKET_ERROR)
         {
             err_quit("send()");
         }
 
-        if (send(clientSock, (char*)&pSendData, sizeof(PlayerData), 0) == SOCKET_ERROR)
-        {
-            err_quit("send()");
-        }
+        EnterCriticalSection(&g_cs);
+        SendPlayerInfo(clientSock);
+        LeaveCriticalSection(&g_cs);
 
         recvn(clientSock, (char*)&msgType, sizeof(int), 0);
 
