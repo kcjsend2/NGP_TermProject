@@ -106,14 +106,17 @@ void RecvPlayerInfo(const SOCKET& sock)
 
 DWORD WINAPI TransportData(LPVOID arg)
 {
-    SOCKET clientSock = *(SOCKET*)arg;
+    SOCKET clientSock = (SOCKET)arg;
 
     int msgType = 0;
 
     // 시작 신호를 기다림
     while (1)
     {
-        recvn(clientSock, (char*)&msgType, sizeof(int), 0);
+        if (recvn(clientSock, (char*)&msgType, sizeof(int), 0) == SOCKET_ERROR)
+        {
+            err_display("receive start");
+        }
 
         if (msgType & GAME_START)
         {
@@ -189,7 +192,6 @@ void InitNetworkSocket()
 {
     LPWSTR* szArgList;
     int argCount;
-    int msgType;
 
     InitializeCriticalSection(&g_cs);
 
@@ -220,8 +222,8 @@ void InitNetworkSocket()
     {
         err_display("connect()");
     }
-
-    CreateThread(NULL, 0, TransportData, &clientSocket, 0, NULL);
+    
+    CreateThread(NULL, 0, TransportData, (LPVOID)clientSocket, 0, NULL);
 }
 
 
