@@ -352,8 +352,8 @@ void CGameFramework::BuildObjects()
 		m_pShadowMap[0]->GetShader()->GetObjectVector()->push_back(m_pPlayer->GetWheels()[j]);
 	}
 
-	auto pInstancingShader = m_pScene->GetInstancingShader();
-	m_pShadowMap[0]->GetShader()->GetInstancingObjectVector()->push_back(pInstancingShader->GetObjectVector()[0]);
+	//auto pInstancingShader = m_pScene->GetInstancingShader();
+	//m_pShadowMap[0]->GetShader()->GetInstancingObjectVector()->push_back(pInstancingShader->GetObjectVector()[0]);
 	m_GameTimer.Reset();
 }
 
@@ -459,9 +459,9 @@ void CGameFramework::Update()
 		m_pShadowMap[0]->GetShader()->GetObjectVector()->push_back(m_pPlayer->GetWheels()[j]);
 	}
 
-	auto pInstancingShader = m_pScene->GetInstancingShader();
-	m_pShadowMap[0]->GetShader()->GetInstancingObjectVector()->clear();
-	m_pShadowMap[0]->GetShader()->GetInstancingObjectVector()->push_back(pInstancingShader->GetObjectVector()[0]);
+	//auto pInstancingShader = m_pScene->GetInstancingShader();
+	//m_pShadowMap[0]->GetShader()->GetInstancingObjectVector()->clear();
+	//m_pShadowMap[0]->GetShader()->GetInstancingObjectVector()->push_back(pInstancingShader->GetObjectVector()[0]);
 
 	ProcessInput();
 	if (m_pScene) m_pScene->Update(m_pd3dDevice.Get(), m_pd3dCommandList.Get(), m_GameTimer.GetTimeElapsed(), m_pbtDynamicsWorld.get(), m_pPlayer);

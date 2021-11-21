@@ -481,7 +481,7 @@ void CInstancingShader::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 				btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, CubeShape, localInertia);
 
 				pRotatingObject->SetRigidBody(rbInfo);
-				pbtDynamicsWorld->addRigidBody(pRotatingObject->GetRigidBody());
+				//pbtDynamicsWorld->addRigidBody(pRotatingObject->GetRigidBody());
 
 				pRotatingObject->SetInstanceNum(m_nObjects);
 

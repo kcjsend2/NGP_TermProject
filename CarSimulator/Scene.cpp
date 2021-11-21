@@ -25,8 +25,8 @@ void CScene::ReleaseObjects()
 	if (m_pd3dGraphicsRootSignature)
 		m_pd3dGraphicsRootSignature->Release();
 
-	m_pInstancingShader->ReleaseShaderVariables();
-	m_pInstancingShader->ReleaseObjects();
+	//m_pInstancingShader->ReleaseShaderVariables();
+	//m_pInstancingShader->ReleaseObjects();
 
 	if (m_pInstancingShader)
 		delete[] m_pInstancingShader;
@@ -34,57 +34,57 @@ void CScene::ReleaseObjects()
 
 void CScene::Update(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fTimeElapsed, btDiscreteDynamicsWorld* pbtDynamicsWorld, std::shared_ptr<CVehiclePlayer> pPlayer)
 {
-	m_pInstancingShader->Update(fTimeElapsed, pbtDynamicsWorld);
-	m_pInstancingShader->UpdateShaderVariables(pd3dCommandList);
+	//m_pInstancingShader->Update(fTimeElapsed, pbtDynamicsWorld);
+	//m_pInstancingShader->UpdateShaderVariables(pd3dCommandList);
 
 	m_pLightShader->Update(fTimeElapsed, pPlayer->GetPosition());
 	m_pAnimatedBillBoardShader->UpdateShaderVariables(pd3dCommandList, fTimeElapsed);
 
-	auto pBullet = pPlayer->GetBullet();
+	//auto pBullet = pPlayer->GetBullet();
 
-	if (pBullet)
-	{
-		std::vector<std::shared_ptr<CGameObject>>& vpInstancingObjects = m_pInstancingShader[0].GetObjectVector();
+	//if (pBullet)
+	//{
+	//	std::vector<std::shared_ptr<CGameObject>>& vpInstancingObjects = m_pInstancingShader[0].GetObjectVector();
 
-		for (auto i = vpInstancingObjects.begin(); i < vpInstancingObjects.end();)
-		{
-			BoundingOrientedBox bulletBB = pBullet->GetBoudingBox(0);
-			BoundingOrientedBox meshBB = vpInstancingObjects[0]->GetBoudingBox(0);
+	//	for (auto i = vpInstancingObjects.begin(); i < vpInstancingObjects.end();)
+	//	{
+	//		BoundingOrientedBox bulletBB = pBullet->GetBoudingBox(0);
+	//		BoundingOrientedBox meshBB = vpInstancingObjects[0]->GetBoudingBox(0);
 
-			XMMATRIX xmMatrix;
+	//		XMMATRIX xmMatrix;
 
-			xmMatrix = XMLoadFloat4x4(&i->get()->GetWorldTransformMatrix());
-			meshBB.Transform(meshBB, xmMatrix);
+	//		xmMatrix = XMLoadFloat4x4(&i->get()->GetWorldTransformMatrix());
+	//		meshBB.Transform(meshBB, xmMatrix);
 
-			xmMatrix = XMLoadFloat4x4(&pBullet->GetWorldTransformMatrix());
-			bulletBB.Transform(bulletBB, xmMatrix);
+	//		xmMatrix = XMLoadFloat4x4(&pBullet->GetWorldTransformMatrix());
+	//		bulletBB.Transform(bulletBB, xmMatrix);
 
-			if (bulletBB.Intersects(meshBB) && vpInstancingObjects.size() > 1)
-			{
-				if (i == vpInstancingObjects.begin())
-				{
-					vpInstancingObjects[1]->SetMesh(i->get()->GetMesh(0));
-				}
+	//		if (bulletBB.Intersects(meshBB) && vpInstancingObjects.size() > 1)
+	//		{
+	//			if (i == vpInstancingObjects.begin())
+	//			{
+	//				vpInstancingObjects[1]->SetMesh(i->get()->GetMesh(0));
+	//			}
 
-				m_pAnimatedBillBoardShader->AddBillBoard(pd3dDevice, pd3dCommandList, i->get()->GetPosition(), 20, 5, 4, std::vector<float>(20, 0.1f));
+	//			m_pAnimatedBillBoardShader->AddBillBoard(pd3dDevice, pd3dCommandList, i->get()->GetPosition(), 20, 5, 4, std::vector<float>(20, 0.1f));
 
-				pbtDynamicsWorld->removeRigidBody(i->get()->GetRigidBody());
-				i = vpInstancingObjects.erase(i);
-				pPlayer->EraseBullet();
-				pBullet = NULL;
+	//			pbtDynamicsWorld->removeRigidBody(i->get()->GetRigidBody());
+	//			i = vpInstancingObjects.erase(i);
+	//			pPlayer->EraseBullet();
+	//			pBullet = NULL;
 
-				break;
-			}
-			else
-			{
-				i++;
-			}
-		}
-		for (auto i = vpInstancingObjects.begin(); i < vpInstancingObjects.end(); ++i)
-		{
-			i->get()->SetInstanceNum(vpInstancingObjects.size());
-		}
-	}
+	//			break;
+	//		}
+	//		else
+	//		{
+	//			i++;
+	//		}
+	//	}
+	//	for (auto i = vpInstancingObjects.begin(); i < vpInstancingObjects.end(); ++i)
+	//	{
+	//		i->get()->SetInstanceNum(vpInstancingObjects.size());
+	//	}
+	//}
 }
 
 void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, btAlignedObjectArray<btCollisionShape*>& btCollisionShapes, btDiscreteDynamicsWorld* pbtDynamicsWorld, ComPtr<ID3D12DescriptorHeap> pd3dSrvDescriptorHeap)
@@ -104,9 +104,9 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_pTerrain = std::make_shared<CHeightMapTerrain>(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Assets/Image/Terrain/PlaneMap.raw"), 512, 512, 512, 512, xmf3Scale, btCollisionShapes, pbtDynamicsWorld, pd3dSrvDescriptorHeap);
 	//m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Assets/Image/Terrain/HeightMap.raw"), 217, 217, 217, 217, xmf3Scale, btCollisionShapes, pbtDynamicsWorld);
 
-	m_pInstancingShader = new CInstancingShader;
+	/*m_pInstancingShader = new CInstancingShader;
 	m_pInstancingShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
-	m_pInstancingShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pTerrain.get(), btCollisionShapes, pbtDynamicsWorld, pd3dSrvDescriptorHeap);
+	m_pInstancingShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pTerrain.get(), btCollisionShapes, pbtDynamicsWorld, pd3dSrvDescriptorHeap);*/
 
 	m_pSkyboxShader = new CSkyBoxShader;
 	m_pSkyboxShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
@@ -123,7 +123,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 void CScene::ReleaseUploadBuffers()
 {
-	m_pInstancingShader->ReleaseUploadBuffers();
+	//m_pInstancingShader->ReleaseUploadBuffers();
 	
 	m_pTerrain->ReleaseUploadBuffers();
 
@@ -153,7 +153,7 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	{
 		m_pTerrain->Render(pd3dCommandList);
 	}
-	m_pInstancingShader->Render(pd3dCommandList);
+	//m_pInstancingShader->Render(pd3dCommandList);
 	m_pBillBoardShader->Render(pd3dCommandList);
 	m_pAnimatedBillBoardShader->Render(pd3dCommandList);
 
