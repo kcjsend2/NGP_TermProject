@@ -169,7 +169,7 @@ void SendGameStart(ThreadFuncParam* param)
     int msg{ GAME_START };
     send(param->sock, (char*)&msg, sizeof(int), 0);
    
-    XMFLOAT3 SpawnPosition[3]{ {400.0f, 5.0f, 200.0f}, {400.0f, 5.0f, 300.0f}, {300.0f, 5.0f, 300.0f} };  // 맨 처음 스폰 좌표 설정. 어디로 할 지 정해줘야 할 듯. 그냥 임의의 숫자 써둠
+    XMFLOAT3 SpawnPosition[3]{ {400.0f, 5.0f, 200.0f}, {400.0f, 5.0f, 300.0f}, {400.0f, 5.0f, 400.0f} };  // 맨 처음 스폰 좌표 설정
 
     //스폰 좌표 송신
     send(param->sock, (char*)&SpawnPosition[param->id], sizeof(XMFLOAT3), 0);
