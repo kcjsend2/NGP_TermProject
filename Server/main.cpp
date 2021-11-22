@@ -1,6 +1,7 @@
 #include "main.h"
 
 // 전역 변수 선언
+array<HANDLE, 3> g_events;
 array<PlayerData, 3> g_players;
 
 int main()
@@ -53,6 +54,11 @@ int main()
         cout << "[접속]" << inet_ntoa(clientAddr.sin_addr) << ":" << ntohs(clientAddr.sin_port) << endl;
     }
 
+    // 쓰레드 동기화를 위한 이벤트 생성
+    g_events[0] = CreateEvent(NULL, TRUE, TRUE, TEXT("PLAYER0"));
+    g_events[1] = CreateEvent(NULL, TRUE, FALSE, TEXT("PLAYER1"));
+    g_events[2] = CreateEvent(NULL, TRUE, FALSE, TEXT("PLAYER2"));
+
     // 쓰레드 생성
     for (int i = 0; i < 3; ++i)
     {
@@ -65,10 +71,11 @@ int main()
     // 쓰레드 하나가 종료되었다는 것은 종료 조건을 만족했다는 것이다. 연결되어있는 모든 클라이언트들에게 종료 메시지를 보낸다.
     WaitForSingleObject(hThread[0], INFINITE);
 
+    // 메시지 송신
     int msgType{ GAME_OVER };
     for (int i = 0; i < 3; ++i)
     {
-        send(clientSock[i], (char*)&msgType, sizeof(PlayerData), 0);
+        send(clientSock[i], (char*)&msgType, sizeof(int), 0);
         closesocket(clientSock[i]);
     }
     closesocket(sock);
@@ -77,13 +84,11 @@ int main()
 
 void RecvPlayerInfo(ThreadFuncParam* param)
 {
-    PlayerData playerData;
-    RecvN(param->sock, (char*)&playerData, sizeof(PlayerData), 0);
-    g_players[param->id] = playerData;
+    RecvN(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
 
     XMFLOAT3 playerPos = g_players[param->id].m_position;
+    cout << "PLAYER" << param->id << " : " << playerPos.x << ", " << playerPos.y << ", " << playerPos.z << endl;
 
-    printf("%d번 플레이어 위치 : %f, %f, %f\n", param->id, playerPos.x, playerPos.y, playerPos.z);
     ///////////////////////
     // 충돌 검사를 한다. //
     ///////////////////////
@@ -105,15 +110,12 @@ DWORD WINAPI ProcessClientData(LPVOID arg)
 
     while (TRUE)
     {
-        ///////////////////////////////////////////////
-        // 0번 이벤트가 신호 상태가 되기를 대기한다. //
-        ///////////////////////////////////////////////
-        
-        // 메시지 타입을 수신한다.
-        int msg = 0;
-        RecvN(param->sock, (char*)&msg, sizeof(int), 0);
-        printf("%d번 쓰레드 메시지 수신, 메시지 ID: %d\n", param->id, msg);
+        // 자신의 이벤트가 신호 상태가 될 때까지 대기
+        WaitForSingleObject(g_events[param->id], INFINITE);
 
+        // 메시지 타입을 수신한다.
+        int msg;
+        RecvN(param->sock, (char*)&msg, sizeof(int), 0);
 
         // 메시지 타입이 PLAYER_UPDATE라면 플레이어 정보 구조체를 수신한다.
         if (msg & PLAYER_UPDATE)
@@ -121,10 +123,11 @@ DWORD WINAPI ProcessClientData(LPVOID arg)
             RecvPlayerInfo(param);
         }
 
-        ////////////////////////////////////////
-        // 0번 이벤트를 비신호 상태로 바꾼다. //
-        // 1번 이벤트를 신호 상태로 바꾼다.   //
-        ////////////////////////////////////////
+        // 자신의 이벤트 비신호 상태로 변경
+        ResetEvent(g_events[param->id]);
+
+        // 다음 이벤트 신호 상태로 변경
+        SetEvent(g_events[(param->id + 1) % g_events.size()]);
     }
     return 0;
 }
@@ -158,7 +161,6 @@ void SendPlayerInfo(ThreadFuncParam* param)
     {
         if (i == param->id)
             continue;
-
         send(param->sock, (char*)&g_players[i], sizeof(PlayerData), 0);
     }
 }
@@ -169,12 +171,13 @@ void SendGameStart(ThreadFuncParam* param)
     int msg{ GAME_START };
     send(param->sock, (char*)&msg, sizeof(int), 0);
    
-    XMFLOAT3 SpawnPosition[3]{ {400.0f, 5.0f, 200.0f}, {400.0f, 5.0f, 300.0f}, {400.0f, 5.0f, 400.0f} };  // 맨 처음 스폰 좌표 설정
-
-    //스폰 좌표 송신
-    send(param->sock, (char*)&SpawnPosition[param->id], sizeof(XMFLOAT3), 0);
-
-    printf("%d번 쓰레드 게임 시작 송신\n", param->id);
+    // 스폰 좌표 송신
+    XMFLOAT3 spawnPosition[]{
+        { 400.0f, 5.0f, 200.0f },
+        { 400.0f, 5.0f, 300.0f },
+        { 400.0f, 5.0f, 400.0f }
+    };
+    send(param->sock, (char*)&spawnPosition[param->id], sizeof(XMFLOAT3), 0);
 }
 
 bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 BulletPosition)
