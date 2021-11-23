@@ -174,8 +174,8 @@ void SendGameStart(ThreadFuncParam* param)
     // 스폰 좌표 송신
     XMFLOAT3 spawnPosition[]{
         { 400.0f, 5.0f, 200.0f },
-        { 400.0f, 5.0f, 300.0f },
-        { 400.0f, 5.0f, 400.0f }
+        { 405.0f, 5.0f, 200.0f },
+        { 395.0f, 5.0f, 200.0f }
     };
     send(param->sock, (char*)&spawnPosition[param->id], sizeof(XMFLOAT3), 0);
 }

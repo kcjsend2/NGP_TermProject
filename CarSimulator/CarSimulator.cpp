@@ -92,9 +92,7 @@ void RecvGameStart(const SOCKET& sock)
     XMFLOAT3 StartPos;
     recvn(sock, (char*)&StartPos, sizeof(XMFLOAT3), 0);
 
-    EnterCriticalSection(&g_cs);
     gGameFramework.m_pPlayer->SetRigidBodyPosition(StartPos);
-    LeaveCriticalSection(&g_cs);
 }
 
 void RecvPlayerInfo(const SOCKET& sock)
@@ -133,39 +131,28 @@ DWORD WINAPI TransportData(LPVOID arg)
             err_quit("send()");
         }
 
-        EnterCriticalSection(&g_cs);
         SendPlayerInfo(clientSock);
-        LeaveCriticalSection(&g_cs);
 
         recvn(clientSock, (char*)&msgType, sizeof(int), 0);
 
         // 분기, 플레이어 조작
         if (msgType & PLAYER_UPDATE)
         {
-            EnterCriticalSection(&g_cs);
-            
             //ZeroMemory()??
             //RecvPlayerInfo(0); 로 안 나누는 게 맞는 지 잘 모르겠음. 일단 계획서 살짝 고침.
             RecvPlayerInfo(clientSock);
-            LeaveCriticalSection(&g_cs);
         }
         if (msgType & PLAYER_HIT)
         {
-            EnterCriticalSection(&g_cs);
             gGameFramework.PlayerHIt();
-            LeaveCriticalSection(&g_cs);
         }
         if (msgType & BULLET_DELETED)
         {
-            EnterCriticalSection(&g_cs);
             gGameFramework.m_pPlayer->EraseBullet();
-            LeaveCriticalSection(&g_cs);
         }
         if (msgType & GAME_OVER)
         {
-            EnterCriticalSection(&g_cs);
             //recvn(clientSock, (char*)&/*blabla == 승리여부 변수*/, sizeof(/*blabla*/), 0);
-            LeaveCriticalSection(&g_cs);
             break;
         }
 
@@ -259,9 +246,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
         else
         {
-            EnterCriticalSection(&g_cs);
             gGameFramework.FrameAdvance();
-            LeaveCriticalSection(&g_cs);
             Sleep(0.1f);
         }
     }

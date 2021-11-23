@@ -337,10 +337,24 @@ void CGameFramework::BuildObjects()
 
 	m_pPlayer = make_unique<CVehiclePlayer>(m_pd3dDevice.Get(), m_pd3dCommandList.Get(), m_pScene->GetGraphicsRootSignature(), m_btCollisionShapes, m_pbtDynamicsWorld.get(), 1);
 	m_pCamera = m_pPlayer->GetCamera();
+
+
+	CPlayerShader* pShader = new CPlayerShader();
+	pShader->CreateShader(m_pd3dDevice.Get(), m_pScene->GetGraphicsRootSignature());
+
+	std::shared_ptr<CMeshFileRead> pVehicleMesh = std::make_shared<CMeshFileRead>(m_pd3dDevice.Get(), m_pd3dCommandList.Get(), (char*)"Models/FlyerPlayership.bin", false);
+	for (int i = 0; i < 2; ++i)
+	{
+		m_pOtherPlayer[i] = std::make_shared<CGameObject>(1);
+		m_pOtherPlayer[i]->SetMesh(pVehicleMesh);
+		m_pOtherPlayer[i]->SetShader(pShader);
+	}
+
 	m_pd3dCommandList->Close();
 	ID3D12CommandList* ppd3dCommandLists[] = { m_pd3dCommandList.Get() };
 	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
 	WaitForGpuComplete();
+
 
 	Update();
 	// 쉐도우맵은 모든 오브젝트를 그려야한다.
@@ -349,7 +363,7 @@ void CGameFramework::BuildObjects()
 
 	for (int j = 0; j< 4; ++j)
 	{
-		m_pShadowMap[0]->GetShader()->GetObjectVector()->push_back(m_pPlayer->GetWheels()[j]);
+		//m_pShadowMap[0]->GetShader()->GetObjectVector()->push_back(m_pPlayer->GetWheels()[j]);
 	}
 
 	//auto pInstancingShader = m_pScene->GetInstancingShader();
@@ -454,9 +468,14 @@ void CGameFramework::Update()
 	m_pShadowMap[0]->GetShader()->GetObjectVector()->push_back(m_pScene->GetTerrain());
 	m_pShadowMap[0]->GetShader()->GetObjectVector()->push_back(m_pPlayer);
 
+	for (int i = 0; i < 2; ++i)
+	{
+		m_pOtherPlayer[i]->SetPosition(g_otherPlayersData[i].m_position);
+	}
+
 	for (int j = 0; j < 4; ++j)
 	{
-		m_pShadowMap[0]->GetShader()->GetObjectVector()->push_back(m_pPlayer->GetWheels()[j]);
+		//m_pShadowMap[0]->GetShader()->GetObjectVector()->push_back(m_pPlayer->GetWheels()[j]);
 	}
 
 	//auto pInstancingShader = m_pScene->GetInstancingShader();
@@ -565,6 +584,9 @@ void CGameFramework::FrameAdvance()
 	//3인칭 카메라일 때 플레이어를 렌더링한다.
 	if (m_pPlayer)
 		m_pPlayer->Render(m_pd3dCommandList.Get(), m_pCamera);
+
+	for (int i = 0; i < 2; ++i)
+		m_pOtherPlayer[i]->Render(m_pd3dCommandList.Get());
 
 	m_pd3dCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_ppd3dRenderTargetBuffers[m_nSwapChainBufferIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 	//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
