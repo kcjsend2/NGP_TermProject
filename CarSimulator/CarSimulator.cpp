@@ -16,6 +16,7 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름�
 
 std::array<HANDLE, 2> g_events;
 bool g_bGameStarted = false;
+bool IsWin = false;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -157,6 +158,8 @@ DWORD WINAPI TransportData(LPVOID arg)
         }
         if (msgType & GAME_OVER)
         {
+            if (gGameFramework.m_pPlayer->GetLife() != 0) IsWin = true;
+
             //recvn(clientSock, (char*)&/*blabla == 승리여부 변수*/, sizeof(/*blabla*/), 0);
             break;
         }

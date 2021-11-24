@@ -4,6 +4,8 @@
 array<HANDLE, 3> g_events;
 array<PlayerData, 3> g_players;
 
+int msgType{ 0b00000 };
+
 int main()
 {
     WSADATA wsa;
@@ -46,7 +48,7 @@ int main()
     {
         addrlen = sizeof(SOCKADDR);
         clientSock[i] = accept(sock, (SOCKADDR*)&clientAddr, &addrlen);
-        if (clientSock[i] == INVALID_SOCKET) 
+        if (clientSock[i] == INVALID_SOCKET)
         {
             --i;
             continue;
@@ -72,7 +74,7 @@ int main()
     WaitForSingleObject(hThread[0], INFINITE);
 
     // 메시지 송신
-    int msgType{ GAME_OVER };
+    msgType = msgType | GAME_OVER;
     for (int i = 0; i < 3; ++i)
     {
         send(clientSock[i], (char*)&msgType, sizeof(int), 0);
@@ -89,15 +91,17 @@ void RecvPlayerInfo(ThreadFuncParam* param)
     XMFLOAT3 playerPos = g_players[param->id].m_position;
     cout << "PLAYER" << param->id << " : " << playerPos.x << ", " << playerPos.y << ", " << playerPos.z << endl;
 
+    CheckBulletDeleted(param);
     ///////////////////////
     // 충돌 검사를 한다. //
     ///////////////////////
 
-    ///////////////////////////
-    // 게임 종료를 체크한다. //
-    ///////////////////////////
+    CheckGameOver(param);
+        ///////////////////////////
+        // 게임 종료를 체크한다. //
+        ///////////////////////////
 
-    // 다른 플레이어에게 이 플레이어의 정보를 송신한다.
+        // 다른 플레이어에게 이 플레이어의 정보를 송신한다.
     SendPlayerInfo(param);
 }
 
@@ -153,9 +157,9 @@ int RecvN(const SOCKET& socket, char* buffer, int length, int flags)
 void SendPlayerInfo(ThreadFuncParam* param)
 {
     // 메시지 송신
-    int msg{ PLAYER_UPDATE };
-    send(param->sock, (char*)&msg, sizeof(int), 0);
-
+    msgType |= PLAYER_UPDATE;
+    send(param->sock, (char*)&msgType, sizeof(int), 0);
+    msgType &= GAME_START;        //msgType을 0b00001로 만듦.
     // 플레이어 정보 구조체 송신
     for (int i = 0; i < 3; ++i)
     {
@@ -168,9 +172,9 @@ void SendPlayerInfo(ThreadFuncParam* param)
 void SendGameStart(ThreadFuncParam* param)
 {
     // 메시지 송신
-    int msg{ GAME_START };
-    send(param->sock, (char*)&msg, sizeof(int), 0);
-   
+    msgType |= GAME_START;
+    send(param->sock, (char*)&msgType, sizeof(int), 0);
+
     // 스폰 좌표 송신
     XMFLOAT3 spawnPosition[]{
         { 400.0f, 5.0f, 200.0f },
@@ -179,7 +183,30 @@ void SendGameStart(ThreadFuncParam* param)
     };
     send(param->sock, (char*)&spawnPosition[param->id], sizeof(XMFLOAT3), 0);
 }
+void CheckBulletDeleted(ThreadFuncParam* param)
+{
+    for (int i = 0; i < 3; ++i)
+    {
+        if (param->id == i)
+            continue;
+        if (BulletCollisionCheck(g_players[i].m_position, g_players[i].m_rotate, g_players[param->id].m_bulletPosition))
+        {
+            msgType |= BULLET_DELETED;
+            break;
+        }
+    }
+}
+void CheckGameOver(ThreadFuncParam* param)
+{
+    int cnt = 0;
+    for (int i = 0; i < 3; ++i)
+        if (g_players[i].m_life != 0)
+            ++cnt;
+    if (cnt <= 1)
+        msgType |= GAME_OVER;
 
+   
+}
 bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 BulletPosition)
 {
     BoundingOrientedBox BBPlayer{ playerPosition, XMFLOAT3{ 4.5f, 1.1f, 4.5f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };

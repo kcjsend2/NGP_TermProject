@@ -61,8 +61,8 @@ struct PlayerData
 
 struct ThreadFuncParam
 {
-    int     id;
-    SOCKET  sock;
+	int     id;
+	SOCKET  sock;
 };
 
 // 수신 함수
@@ -70,8 +70,8 @@ void RecvPlayerInfo(ThreadFuncParam* param);
 
 // 송신 함수
 void SendGameStart(ThreadFuncParam* param);
-void SendGameOver(ThreadFuncParam* param) { }
-void SendBulletDeleted(ThreadFuncParam* param) { }
+void CheckGameOver(ThreadFuncParam* param);
+void CheckBulletDeleted(ThreadFuncParam* param);
 void SendPlayerInfo(ThreadFuncParam* param);
 
 // 쓰레드 함수
