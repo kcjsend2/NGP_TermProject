@@ -487,9 +487,6 @@ void CGameFramework::Update()
 
 	ProcessInput();
 	if (m_pScene) m_pScene->Update(m_pd3dDevice.Get(), m_pd3dCommandList.Get(), m_GameTimer.GetTimeElapsed(), m_pbtDynamicsWorld.get(), m_pPlayer);
-
-	// 씬에서 플레이어 업데이트 이후 플레이어 정보 송신
-	SendPlayerInfo();
 }
 
 void CGameFramework::WaitForGpuComplete()
@@ -627,20 +624,4 @@ void CGameFramework::ChangeSwapChainState()
 	m_pdxgiSwapChain->ResizeBuffers(m_nSwapChainBuffers, m_nWndClientWidth, m_nWndClientHeight, dxgiSwapChainDesc.BufferDesc.Format, dxgiSwapChainDesc.Flags);
 	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
 	CreateRenderTargetViews();
-}
-
-// ------------------------------------------------------
-
-void CGameFramework::SendPlayerInfo()
-{
-	int msg{ PLAYER_UPDATE };
-	send(m_clientSocket, (char*)&msg, sizeof(int), 0);
-
-	PlayerData playerData{};
-	playerData.m_position = m_pPlayer->GetPosition();
-	playerData.m_rotate = { m_pPlayer->GetRoll(), m_pPlayer->GetPitch(), m_pPlayer->GetYaw() };
-	playerData.m_life = m_pPlayer->GetLife();
-	playerData.m_bHasBullet = m_pPlayer->GetBullet() == nullptr ? false : true;
-	playerData.m_bulletPosition = playerData.m_bHasBullet ? m_pPlayer->GetBullet()->GetPosition() : XMFLOAT3{ };
-	send(m_clientSocket, (char*)&playerData, sizeof(PlayerData), 0);
 }

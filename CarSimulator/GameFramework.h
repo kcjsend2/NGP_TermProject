@@ -135,7 +135,7 @@ public:
 		float roll = XMVectorGetX(res);
 		float yaw = XMVectorGetY(res);
 
-		return XMFLOAT3(roll, pitch, yaw);
+		return XMFLOAT3(pitch, yaw, roll);
 	}
 	int GetPlayerLife() { return m_pPlayer->m_nLife; }
 	void PlayerHIt() { m_pPlayer->m_nLife--; }

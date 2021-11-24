@@ -35,7 +35,7 @@ using namespace DirectX;
 struct PlayerData
 {
 	XMFLOAT3 m_position; 	// 플레이어 위치
-	XMFLOAT3 m_rotate;		// 플레이어 회전 정보(roll, pitch, yaw)
+	XMFLOAT3 m_rotate;		// 플레이어 회전 정보(pitch, yaw, roll)
 	int m_life;			// 플레이어의 목숨 수
 	bool m_bHasBullet;		// 총알 유무
 	XMFLOAT3 m_bulletPosition;	// 총알 위치
