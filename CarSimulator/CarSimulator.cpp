@@ -14,6 +14,9 @@ HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 
+std::array<HANDLE, 2> g_events;
+bool g_bGameStarted = false;
+
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
@@ -104,6 +107,7 @@ void RecvPlayerInfo(const SOCKET& sock)
 
 DWORD WINAPI TransportData(LPVOID arg)
 {
+    WaitForSingleObject(g_events[1], INFINITE);
     SOCKET clientSock = (SOCKET)arg;
 
     int msgType = 0;
@@ -118,6 +122,7 @@ DWORD WINAPI TransportData(LPVOID arg)
 
         if (msgType & GAME_START)
         {
+            g_bGameStarted = true;
             RecvGameStart(clientSock);
             break;
         }
@@ -156,7 +161,8 @@ DWORD WINAPI TransportData(LPVOID arg)
             break;
         }
 
-        Sleep(0.1f);
+        ResetEvent(g_events[1]);
+        SetEvent(g_events[0]);
     }
 
     closesocket(clientSock);
@@ -228,6 +234,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
+    g_events[0] = CreateEvent(NULL, TRUE, TRUE, TEXT("RENDER"));
+    g_events[1] = CreateEvent(NULL, TRUE, TRUE, TEXT("NETWORK"));
+
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CARSIMULATOR));
 
     MSG msg;
@@ -246,8 +255,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
         else
         {
+            if(g_bGameStarted)
+                WaitForSingleObject(g_events[0], INFINITE);
+
             gGameFramework.FrameAdvance();
-            Sleep(0.1f);
+
+            if (g_bGameStarted)
+            {
+                ResetEvent(g_events[0]);
+                SetEvent(g_events[1]);
+            }
         }
     }
     gGameFramework.OnDestroy();

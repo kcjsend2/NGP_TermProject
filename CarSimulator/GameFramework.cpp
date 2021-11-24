@@ -348,6 +348,7 @@ void CGameFramework::BuildObjects()
 		m_pOtherPlayer[i] = std::make_shared<CGameObject>(1);
 		m_pOtherPlayer[i]->SetMesh(pVehicleMesh);
 		m_pOtherPlayer[i]->SetShader(pShader);
+		m_pOtherPlayer[i]->SetMaterial(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f), XMFLOAT3(0.6f, 0.6f, 0.6f), 0.8f);
 	}
 
 	m_pd3dCommandList->Close();
@@ -470,7 +471,9 @@ void CGameFramework::Update()
 
 	for (int i = 0; i < 2; ++i)
 	{
+		m_pOtherPlayer[i]->ResetRotate();
 		m_pOtherPlayer[i]->SetPosition(g_otherPlayersData[i].m_position);
+		m_pOtherPlayer[i]->Rotate(g_otherPlayersData[i].m_rotate.x, g_otherPlayersData[i].m_rotate.y, g_otherPlayersData[i].m_rotate.z);
 	}
 
 	for (int j = 0; j < 4; ++j)

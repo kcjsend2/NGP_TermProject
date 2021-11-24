@@ -35,6 +35,7 @@
 #include <DirectXCollision.h>
 #include <DXGIDebug.h>
 
+
 #include "pix3.h"
 #include "d3dx12.h"
 #include "UploadBuffer.h"
@@ -77,7 +78,7 @@ inline void Swap(float* pfS, float* pfT) { float fTemp = *pfS; *pfS = *pfT; *pfT
 struct PlayerData
 {
 	XMFLOAT3 m_position; 	// 플레이어 위치
-	XMFLOAT3 m_rotate;		// 플레이어 회전 정보(roll, pitch, yaw)
+	XMFLOAT3 m_rotate;		// 플레이어 회전 정보(pitch, yaw, roll)
 	int m_life;			// 플레이어의 목숨 수
 	bool m_bHasBullet;		// 총알 유무
 	XMFLOAT3 m_bulletPosition;	// 총알 위치

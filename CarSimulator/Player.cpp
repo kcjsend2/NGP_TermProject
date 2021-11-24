@@ -550,7 +550,7 @@ void CVehiclePlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera*
 
 	for (int i = 0; i < 4; ++i)
 	{
-		m_pWheel[i]->Render(pd3dCommandList);
+		//m_pWheel[i]->Render(pd3dCommandList);
 	}
 
 	if (m_pBullet)
