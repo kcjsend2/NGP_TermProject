@@ -364,8 +364,11 @@ void CGameObject::MoveForward(float fDistance)
 //게임 객체를 주어진 각도로 회전한다.
 void CGameObject::Rotate(float fPitch, float fYaw, float fRoll)
 {
-	XMMATRIX mtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(fPitch), XMConvertToRadians(fYaw), XMConvertToRadians(fRoll));
-	m_xmf4x4World = Matrix4x4::Multiply(mtxRotate, m_xmf4x4World);
+	XMMATRIX mtxPitch = XMMatrixRotationRollPitchYaw((fPitch), (0), (0));
+	XMMATRIX mtxYaw = XMMatrixRotationRollPitchYaw((0), (fYaw), (0));
+	XMMATRIX mtxRoll = XMMatrixRotationRollPitchYaw((0), (0), (fRoll));
+	m_xmf4x4World = Matrix4x4::Multiply(mtxYaw, m_xmf4x4World);
+	m_xmf4x4World = Matrix4x4::Multiply(mtxRoll, m_xmf4x4World);
 	m_fPitch = fPitch;
 	m_fYaw = fYaw;
 	m_fRoll = fRoll;
