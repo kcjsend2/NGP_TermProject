@@ -20,6 +20,9 @@ int main()
         exit(0);
     }
 
+    bool flag = TRUE;
+    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
+
     SOCKADDR_IN serveraddr{};
     serveraddr.sin_family = AF_INET;
     serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
