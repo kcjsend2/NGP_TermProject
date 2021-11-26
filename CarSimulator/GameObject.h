@@ -114,9 +114,9 @@ protected:
 	btRigidBody* m_pbtRigidBody = NULL;
 	int m_nInstance = 1;
 	int m_nTextureIndex = 0;
-	float m_fRoll;
-	float m_fPitch;
-	float m_fYaw;
+	float m_fRoll = 0.0f;
+	float m_fPitch = 0.0f;
+	float m_fYaw = 0.0f;
 
 public:
 	void ReleaseUploadBuffers();

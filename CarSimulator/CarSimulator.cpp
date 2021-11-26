@@ -6,6 +6,7 @@
 #include "GameFramework.h"
 
 CGameFramework gGameFramework;
+int frequency = 0;
 
 #define MAX_LOADSTRING 100
 
@@ -111,6 +112,7 @@ DWORD WINAPI TransportData(LPVOID arg)
     WaitForSingleObject(g_events[1], INFINITE);
     SOCKET clientSock = (SOCKET)arg;
 
+    frequency++;
     int msgType = 0;
 
     // 시작 신호를 기다림
@@ -194,6 +196,9 @@ void InitNetworkSocket()
     SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (clientSocket == INVALID_SOCKET) err_quit("socket()");
 
+    bool flag = TRUE;
+    setsockopt(clientSocket, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
+
     char ctext[20];
     wcstombs(ctext, szArgList[1], wcslen(szArgList[1]) + 1);
     const char* sAddr = ctext;
@@ -263,8 +268,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
             gGameFramework.FrameAdvance();
 
-            if (g_bGameStarted)
+            if (g_bGameStarted && frequency == 3)
             {
+                frequency = 0;
                 ResetEvent(g_events[0]);
                 SetEvent(g_events[1]);
             }

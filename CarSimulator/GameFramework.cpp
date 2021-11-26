@@ -343,12 +343,18 @@ void CGameFramework::BuildObjects()
 	pShader->CreateShader(m_pd3dDevice.Get(), m_pScene->GetGraphicsRootSignature());
 
 	std::shared_ptr<CMeshFileRead> pVehicleMesh = std::make_shared<CMeshFileRead>(m_pd3dDevice.Get(), m_pd3dCommandList.Get(), (char*)"Models/FlyerPlayership.bin", false);
+	std::shared_ptr<CMeshFileRead> pMesh = std::make_shared<CMeshFileRead>(m_pd3dDevice.Get(), m_pd3dCommandList.Get(), (char*)"Models/Sphere.bin", false, XMFLOAT3{ 0.7f, 0.7f, 0.7f });
 	for (int i = 0; i < 2; ++i)
 	{
 		m_pOtherPlayer[i] = std::make_shared<CGameObject>(1);
 		m_pOtherPlayer[i]->SetMesh(pVehicleMesh);
 		m_pOtherPlayer[i]->SetShader(pShader);
 		m_pOtherPlayer[i]->SetMaterial(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f), XMFLOAT3(0.6f, 0.6f, 0.6f), 0.8f);
+
+		m_pOtherPlayerBullet[i] = std::make_shared<CGameObject>(1);
+		m_pOtherPlayerBullet[i]->SetMesh(pMesh);
+		m_pOtherPlayerBullet[i]->SetShader(pShader);
+		m_pOtherPlayerBullet[i]->SetMaterial(XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f), XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f), XMFLOAT3(0.6f, 0.6f, 0.6f), 0.3f);
 	}
 
 	m_pd3dCommandList->Close();
@@ -474,6 +480,12 @@ void CGameFramework::Update()
 		m_pOtherPlayer[i]->ResetRotate();
 		m_pOtherPlayer[i]->SetPosition(g_otherPlayersData[i].m_position);
 		m_pOtherPlayer[i]->Rotate(g_otherPlayersData[i].m_rotate.x, g_otherPlayersData[i].m_rotate.y, g_otherPlayersData[i].m_rotate.z);
+
+		m_pOtherPlayerBullet[i]->SetPosition(XMFLOAT3{0.0f, 0.0f, -300.0f});
+		if (g_otherPlayersData[i].m_bHasBullet)
+		{
+			m_pOtherPlayerBullet[i]->SetPosition(g_otherPlayersData[i].m_bulletPosition);
+		}
 	}
 
 	for (int j = 0; j < 4; ++j)
@@ -586,7 +598,10 @@ void CGameFramework::FrameAdvance()
 		m_pPlayer->Render(m_pd3dCommandList.Get(), m_pCamera);
 
 	for (int i = 0; i < 2; ++i)
+	{
 		m_pOtherPlayer[i]->Render(m_pd3dCommandList.Get());
+		m_pOtherPlayerBullet[i]->Render(m_pd3dCommandList.Get());
+	}
 
 	m_pd3dCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_ppd3dRenderTargetBuffers[m_nSwapChainBufferIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 	//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
