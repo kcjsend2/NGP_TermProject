@@ -1,8 +1,9 @@
 #include "main.h"
 
 // 전역 변수 선언
-array<HANDLE, 3> g_events;
-array<PlayerData, 3> g_players;
+array<HANDLE, 4> g_events;      // 쓰레드 동기화를 위한 이벤트 객체
+array<HANDLE, 3> g_threads;     // 플레이어 정보 송수신 쓰레드 핸들
+array<PlayerData, 3> g_players; // 플레이어 정보
 
 int main()
 {
@@ -39,7 +40,6 @@ int main()
     int addrlen;
     SOCKADDR_IN clientAddr;
     array<SOCKET, 3> clientSock;
-    array<HANDLE, 3> hThread;
 
     // 3명의 플레이어 접속을 대기한다.
     for (int i = 0; i < 3; ++i)
@@ -58,47 +58,67 @@ int main()
     g_events[0] = CreateEvent(NULL, TRUE, TRUE, TEXT("PLAYER0"));
     g_events[1] = CreateEvent(NULL, TRUE, FALSE, TEXT("PLAYER1"));
     g_events[2] = CreateEvent(NULL, TRUE, FALSE, TEXT("PLAYER2"));
+    g_events[3] = CreateEvent(NULL, TRUE, FALSE, TEXT("GAMEOVER"));
 
-    // 쓰레드 생성
+    // 플레이어 정보 송수신 쓰레드 생성
     for (int i = 0; i < 3; ++i)
     {
         ThreadFuncParam* param{ new ThreadFuncParam };
         param->id = i;
         param->sock = clientSock[i];
-        hThread[i] = CreateThread(NULL, 0, ProcessClientData, param, 0, NULL);
+        g_threads[i] = CreateThread(NULL, 0, ProcessClientData, param, 0, NULL);
     }
 
-    // 쓰레드 하나가 종료되었다는 것은 종료 조건을 만족했다는 것이다. 연결되어있는 모든 클라이언트들에게 종료 메시지를 보낸다.
-    WaitForSingleObject(hThread[0], INFINITE);
+    // 게임 종료 확인 쓰레드
+    CreateThread(NULL, 0, CheckGameOver, NULL, 0, NULL);
+
+    // 플레이어 정보 송수신 쓰레드가 종료될 때까지 대기한다 : 이 경우엔 게임이 끝난 것이다.
+    WaitForMultipleObjects(g_threads.size(), g_threads.data(), TRUE, INFINITE);
 
     // 메시지 송신
-    int msgType{ GAME_OVER };
-    for (int i = 0; i < 3; ++i)
+    int msg{ GAME_OVER };
+    for (const SOCKET& s : clientSock)
     {
-        send(clientSock[i], (char*)&msgType, sizeof(int), 0);
-        closesocket(clientSock[i]);
+        send(s, (char*)&msg, sizeof(int), 0);
+        closesocket(s);
     }
     closesocket(sock);
     WSACleanup();
+}
+
+int RecvN(const SOCKET& socket, char* buffer, int length, int flags)
+{
+    char* ptr{ buffer };
+    int received{ 0 }, left{ length };
+
+    while (left > 0)
+    {
+        received = recv(socket, ptr, left, flags);
+        if (received == SOCKET_ERROR)
+            return SOCKET_ERROR;
+        if (received == 0)
+            break;
+        left -= received;
+        ptr += received;
+    }
+    return length - left;
 }
 
 void RecvPlayerInfo(ThreadFuncParam* param)
 {
     RecvN(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
 
-    XMFLOAT3 playerPos = g_players[param->id].m_position;
+    XMFLOAT3 playerPos = g_players[param->id].position;
     cout << "PLAYER" << param->id << " : " << playerPos.x << ", " << playerPos.y << ", " << playerPos.z << endl;
+
+    int msg{ 0 };
 
     ///////////////////////
     // 충돌 검사를 한다. //
     ///////////////////////
 
-    ///////////////////////////
-    // 게임 종료를 체크한다. //
-    ///////////////////////////
-
     // 다른 플레이어에게 이 플레이어의 정보를 송신한다.
-    SendPlayerInfo(param);
+    SendPlayerInfo(param, msg);
 }
 
 DWORD WINAPI ProcessClientData(LPVOID arg)
@@ -132,35 +152,41 @@ DWORD WINAPI ProcessClientData(LPVOID arg)
     return 0;
 }
 
-int RecvN(const SOCKET& socket, char* buffer, int length, int flags)
+DWORD WINAPI CheckGameOver(LPVOID arg)
 {
-    char* ptr{ buffer };
-    int received{ 0 }, left{ length };
-
-    while (left > 0)
+    while (TRUE)
     {
-        received = recv(socket, ptr, left, flags);
-        if (received == SOCKET_ERROR)
-            return SOCKET_ERROR;
-        if (received == 0)
-            break;
-        left -= received;
-        ptr += received;
+        // 게임 종료 체크 이벤트가 활성화 될 때까지 대기
+        WaitForSingleObject(g_events[3], INFINITE);
+
+        // 게임이 종료됬다면 플레이어 정보 송수신 쓰레드 강제 종료
+        if (isGameOver())
+        {
+            for (const HANDLE& h : g_threads)
+                TerminateThread(h, 0);
+            ExitThread(0);
+            return 0;
+        }
+
+        // 자신의 이벤트 비신호 상태로 변경
+        ResetEvent(g_events[3]);
+
+        // PLAYER0 이벤트 신호 상태로 변경
+        SetEvent(g_events[0]);
     }
-    return length - left;
+    return 0;
 }
 
-void SendPlayerInfo(ThreadFuncParam* param)
+void SendPlayerInfo(ThreadFuncParam* param, int msg)
 {
-    // 메시지 송신
-    int msg{ PLAYER_UPDATE };
+    // 메시지 송신 : 파라미터로 받은 msg에 PLAYER_UPDATE 패킷을 추가한다.
+    msg |= PLAYER_UPDATE;
     send(param->sock, (char*)&msg, sizeof(int), 0);
 
     // 플레이어 정보 구조체 송신
     for (int i = 0; i < 3; ++i)
     {
-        if (i == param->id)
-            continue;
+        if (i == param->id) continue;
         send(param->sock, (char*)&g_players[i], sizeof(PlayerData), 0);
     }
 }

@@ -1,5 +1,4 @@
 #pragma once
-
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 // Network
@@ -27,35 +26,28 @@ using namespace DirectX;
 #define PLAYER_HIT		0b01000
 #define BULLET_DELETED	0b10000
 
-// 서버 IP, 포트
-#define SERVER_PORT 9000
+// 서버 포트
+#define SERVER_PORT		9000
 
 // 구조체 선언
 #pragma pack(1)
 struct PlayerData
 {
-	XMFLOAT3 m_position; 	// 플레이어 위치
-	XMFLOAT3 m_rotate;		// 플레이어 회전 정보(roll, pitch, yaw)
-	int m_life;			// 플레이어의 목숨 수
-	bool m_bHasBullet;		// 총알 유무
-	XMFLOAT3 m_bulletPosition;	// 총알 위치
+	XMFLOAT3 position; 			// 플레이어 위치
+	XMFLOAT3 rotate;			// 플레이어 회전 정보(roll, pitch, yaw)
+	int		 life;				// 플레이어의 목숨 수
+	bool	 hasBullet;			// 총알 유무
+	XMFLOAT3 bulletPosition;	// 총알 위치
 
-	PlayerData()
+	PlayerData() : position{}, rotate{}, life{}, hasBullet{}, bulletPosition{}
 	{
-		m_position = { 0.0f, 0.0f, 0.0f };
-		m_rotate = { 0.0f, 0.0f, 0.0f };
-		m_life = 0;
-		m_bHasBullet = false;
-		m_bulletPosition = { 0.0f, 0.0f, 0.0f };
+
 	}
 
-	PlayerData(XMFLOAT3 Position, XMFLOAT3 rotate, int life, bool hasBullet, XMFLOAT3 bulletPosition)
+	PlayerData(XMFLOAT3 _position, XMFLOAT3 _rotate, int _life, bool _hasBullet, XMFLOAT3 _bulletPosition)
+		: position{ _position }, rotate{ _rotate }, life{ _life }, hasBullet{ _hasBullet }, bulletPosition{ _bulletPosition }
 	{
-		m_position = Position;
-		m_rotate = rotate;
-		m_life = life;
-		m_bHasBullet = hasBullet;
-		m_bulletPosition = bulletPosition;
+
 	}
 };
 
@@ -66,19 +58,20 @@ struct ThreadFuncParam
 };
 
 // 수신 함수
+int RecvN(const SOCKET& socket, char* buffer, int length, int flags);
 void RecvPlayerInfo(ThreadFuncParam* param);
 
 // 송신 함수
 void SendGameStart(ThreadFuncParam* param);
 void SendGameOver(ThreadFuncParam* param) { }
 void SendBulletDeleted(ThreadFuncParam* param) { }
-void SendPlayerInfo(ThreadFuncParam* param);
+void SendPlayerInfo(ThreadFuncParam* param, int msg);
 
 // 쓰레드 함수
 DWORD WINAPI ProcessClientData(LPVOID arg);
+DWORD WINAPI CheckGameOver(LPVOID arg);
 
 // 그 외 함수
-int RecvN(const SOCKET& socket, char* buffer, int length, int flags);
 BoundingOrientedBox GetBoundingBox(INT id) { return {}; }
 bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 BulletPosition);
 bool isGameOver() { return false; }
