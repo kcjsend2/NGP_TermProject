@@ -84,6 +84,8 @@ public:
 
 	//플레이어 객체에 대한 포인터이다.
 	std::shared_ptr<CVehiclePlayer> m_pPlayer;
+	std::shared_ptr<CGameObject> m_pOtherPlayer[2];
+	std::shared_ptr<CGameObject> m_pOtherPlayerBullet[2];
 
 	//마지막으로 마우스 버튼을 클릭할 때의 마우스 커서의 위치이다.
 	POINT m_ptOldCursorPos;
@@ -134,7 +136,7 @@ public:
 		float roll = XMVectorGetX(res);
 		float yaw = XMVectorGetY(res);
 
-		return XMFLOAT3(yaw, pitch, roll);
+		return XMFLOAT3(pitch, yaw, roll);
 	}
 	int GetPlayerLife() { return m_pPlayer->m_nLife; }
 	void PlayerHIt() { m_pPlayer->m_nLife--; }

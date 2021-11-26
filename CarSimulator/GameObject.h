@@ -114,6 +114,9 @@ protected:
 	btRigidBody* m_pbtRigidBody = NULL;
 	int m_nInstance = 1;
 	int m_nTextureIndex = 0;
+	float m_fRoll = 0.0f;
+	float m_fPitch = 0.0f;
+	float m_fYaw = 0.0f;
 
 public:
 	void ReleaseUploadBuffers();
@@ -126,6 +129,7 @@ public:
 	//게임 객체를 회전(x-축, y-축, z-축)한다.
 	void Rotate(float fPitch = 10.0f, float fYaw = 10.0f, float fRoll = 10.0f);
 	void Rotate(XMFLOAT3* pxmf3Axis, float fAngle);
+	void ResetRotate() { Rotate(-m_fPitch, -m_fYaw, -m_fRoll); }
 
 	virtual void SetShader(CShader* pShader);
 	virtual void Update(float fTimeElapsed, btDiscreteDynamicsWorld* pbtDynamicsWorld);

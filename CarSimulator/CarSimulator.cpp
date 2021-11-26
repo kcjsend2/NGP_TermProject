@@ -6,6 +6,7 @@
 #include "GameFramework.h"
 
 CGameFramework gGameFramework;
+int frequency = 0;
 
 #define MAX_LOADSTRING 100
 
@@ -13,6 +14,10 @@ CGameFramework gGameFramework;
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
+
+std::array<HANDLE, 2> g_events;
+bool g_bGameStarted = false;
+bool IsWin = false;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -92,9 +97,7 @@ void RecvGameStart(const SOCKET& sock)
     XMFLOAT3 StartPos;
     recvn(sock, (char*)&StartPos, sizeof(XMFLOAT3), 0);
 
-    EnterCriticalSection(&g_cs);
     gGameFramework.m_pPlayer->SetRigidBodyPosition(StartPos);
-    LeaveCriticalSection(&g_cs);
 }
 
 void RecvPlayerInfo(const SOCKET& sock)
@@ -106,8 +109,10 @@ void RecvPlayerInfo(const SOCKET& sock)
 
 DWORD WINAPI TransportData(LPVOID arg)
 {
+    WaitForSingleObject(g_events[1], INFINITE);
     SOCKET clientSock = (SOCKET)arg;
 
+    frequency++;
     int msgType = 0;
 
     // 시작 신호를 기다림
@@ -120,6 +125,7 @@ DWORD WINAPI TransportData(LPVOID arg)
 
         if (msgType & GAME_START)
         {
+            g_bGameStarted = true;
             RecvGameStart(clientSock);
             break;
         }
@@ -133,43 +139,35 @@ DWORD WINAPI TransportData(LPVOID arg)
             err_quit("send()");
         }
 
-        EnterCriticalSection(&g_cs);
         SendPlayerInfo(clientSock);
-        LeaveCriticalSection(&g_cs);
 
         recvn(clientSock, (char*)&msgType, sizeof(int), 0);
 
         // 분기, 플레이어 조작
         if (msgType & PLAYER_UPDATE)
         {
-            EnterCriticalSection(&g_cs);
-            
             //ZeroMemory()??
             //RecvPlayerInfo(0); 로 안 나누는 게 맞는 지 잘 모르겠음. 일단 계획서 살짝 고침.
             RecvPlayerInfo(clientSock);
-            LeaveCriticalSection(&g_cs);
         }
         if (msgType & PLAYER_HIT)
         {
-            EnterCriticalSection(&g_cs);
             gGameFramework.PlayerHIt();
-            LeaveCriticalSection(&g_cs);
         }
         if (msgType & BULLET_DELETED)
         {
-            EnterCriticalSection(&g_cs);
             gGameFramework.m_pPlayer->EraseBullet();
-            LeaveCriticalSection(&g_cs);
         }
         if (msgType & GAME_OVER)
         {
-            EnterCriticalSection(&g_cs);
+            if (gGameFramework.m_pPlayer->GetLife() != 0) IsWin = true;
+
             //recvn(clientSock, (char*)&/*blabla == 승리여부 변수*/, sizeof(/*blabla*/), 0);
-            LeaveCriticalSection(&g_cs);
             break;
         }
 
-        Sleep(0.1f);
+        ResetEvent(g_events[1]);
+        SetEvent(g_events[0]);
     }
 
     closesocket(clientSock);
@@ -197,6 +195,9 @@ void InitNetworkSocket()
     // socket()
     SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (clientSocket == INVALID_SOCKET) err_quit("socket()");
+
+    bool flag = TRUE;
+    setsockopt(clientSocket, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
 
     char ctext[20];
     wcstombs(ctext, szArgList[1], wcslen(szArgList[1]) + 1);
@@ -241,6 +242,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
+    g_events[0] = CreateEvent(NULL, TRUE, TRUE, TEXT("RENDER"));
+    g_events[1] = CreateEvent(NULL, TRUE, TRUE, TEXT("NETWORK"));
+
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CARSIMULATOR));
 
     MSG msg;
@@ -259,10 +263,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
         else
         {
-            EnterCriticalSection(&g_cs);
+            if(g_bGameStarted)
+                WaitForSingleObject(g_events[0], INFINITE);
+
             gGameFramework.FrameAdvance();
-            LeaveCriticalSection(&g_cs);
-            Sleep(0.1f);
+
+            if (g_bGameStarted && frequency == 3)
+            {
+                frequency = 0;
+                ResetEvent(g_events[0]);
+                SetEvent(g_events[1]);
+            }
         }
     }
     gGameFramework.OnDestroy();

@@ -21,6 +21,9 @@ int main()
         exit(0);
     }
 
+    //bool flag = TRUE;
+    //setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
+
     SOCKADDR_IN serveraddr{};
     serveraddr.sin_family = AF_INET;
     serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -46,7 +49,7 @@ int main()
     {
         addrlen = sizeof(SOCKADDR);
         clientSock[i] = accept(sock, (SOCKADDR*)&clientAddr, &addrlen);
-        if (clientSock[i] == INVALID_SOCKET) 
+        if (clientSock[i] == INVALID_SOCKET)
         {
             --i;
             continue;
@@ -113,9 +116,11 @@ void RecvPlayerInfo(ThreadFuncParam* param)
 
     int msg{ 0 };
 
-    ///////////////////////
-    // 충돌 검사를 한다. //
-    ///////////////////////
+    // 내 총알이 남을 피격시켰는 지 검사
+    CheckBulletDeleted(param, msg);
+
+    // 내가 남의 총알에 피격당했는 지 검사
+    CheckPlayerHit(param, msg);
 
     // 다른 플레이어에게 이 플레이어의 정보를 송신한다.
     SendPlayerInfo(param, msg);
@@ -196,14 +201,51 @@ void SendGameStart(ThreadFuncParam* param)
     // 메시지 송신
     int msg{ GAME_START };
     send(param->sock, (char*)&msg, sizeof(int), 0);
-   
+
     // 스폰 좌표 송신
     XMFLOAT3 spawnPosition[]{
         { 400.0f, 5.0f, 200.0f },
-        { 400.0f, 5.0f, 300.0f },
-        { 400.0f, 5.0f, 400.0f }
+        { 405.0f, 5.0f, 200.0f },
+        { 395.0f, 5.0f, 200.0f }
     };
     send(param->sock, (char*)&spawnPosition[param->id], sizeof(XMFLOAT3), 0);
+}
+
+void CheckBulletDeleted(ThreadFuncParam* param, int& msg)
+{
+    for (int i = 0; i < g_players.size(); ++i)
+    {
+        if (param->id == i) continue;
+        if (BulletCollisionCheck(g_players[i].position, g_players[i].rotate, g_players[param->id].bulletPosition))
+        {
+            msg |= BULLET_DELETED;
+            break;
+        }
+    }
+}
+
+void CheckPlayerHit(ThreadFuncParam* param, int& msg)
+{
+    for (int i = 0; i < g_players.size(); ++i)
+    {
+        if (param->id == i) continue;
+        if (BulletCollisionCheck(g_players[param->id].position, g_players[param->id].rotate, g_players[i].bulletPosition))
+        {
+            msg |= PLAYER_HIT;
+            break;
+        }
+    }
+}
+
+bool isGameOver()
+{
+    int cnt = 0;
+    for (int i = 0; i < 3; ++i)
+        if (g_players[i].life != 0)
+            ++cnt;
+    if (cnt <= 1)
+        return true;
+    return false;
 }
 
 bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 BulletPosition)

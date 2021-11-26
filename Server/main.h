@@ -53,8 +53,8 @@ struct PlayerData
 
 struct ThreadFuncParam
 {
-    int     id;
-    SOCKET  sock;
+	int     id;
+	SOCKET  sock;
 };
 
 // 수신 함수
@@ -63,8 +63,6 @@ void RecvPlayerInfo(ThreadFuncParam* param);
 
 // 송신 함수
 void SendGameStart(ThreadFuncParam* param);
-void SendGameOver(ThreadFuncParam* param) { }
-void SendBulletDeleted(ThreadFuncParam* param) { }
 void SendPlayerInfo(ThreadFuncParam* param, int msg);
 
 // 쓰레드 함수
@@ -72,6 +70,7 @@ DWORD WINAPI ProcessClientData(LPVOID arg);
 DWORD WINAPI CheckGameOver(LPVOID arg);
 
 // 그 외 함수
-BoundingOrientedBox GetBoundingBox(INT id) { return {}; }
 bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 BulletPosition);
-bool isGameOver() { return false; }
+void CheckBulletDeleted(ThreadFuncParam* param, int& msg);
+void CheckPlayerHit(ThreadFuncParam* param, int& msg);
+bool isGameOver();
