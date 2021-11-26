@@ -229,11 +229,11 @@ void CheckPlayerHit(ThreadFuncParam* param, int& msg)
     for (int i = 0; i < g_players.size(); ++i)
     {
         if (param->id == i) continue;
-        if (BulletCollisionCheck(g_players[param->id].position, g_players[param->id].rotate, g_players[i].bulletPosition))
-        {
-            msg |= PLAYER_HIT;
-            break;
-        }
+        //if (BulletCollisionCheck(g_players[param->id].position, g_players[param->id].rotate, g_players[i].bulletPosition))
+        //{
+        //    msg |= PLAYER_HIT;
+        //    break;
+        //}
     }
 }
 
@@ -248,13 +248,17 @@ bool isGameOver()
     return false;
 }
 
-bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 BulletPosition)
+bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 bulletPosition)
 {
-    BoundingOrientedBox BBPlayer{ playerPosition, XMFLOAT3{ 4.5f, 1.1f, 4.5f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };
-    BoundingOrientedBox BBBullet{ BulletPosition, XMFLOAT3{ 1.1f, 1.1f, 1.1f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };
+    BoundingOrientedBox BBPlayer{ XMFLOAT3{}, XMFLOAT3{ 4.5f, 1.1f, 4.5f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };
+    BoundingOrientedBox BBBullet{ XMFLOAT3{}, XMFLOAT3{ 1.1f, 1.1f, 1.1f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };
 
-    BBPlayer.Transform(BBPlayer, 1.0f, XMLoadFloat3(&playerRotate), {});
-    BBBullet.Transform(BBBullet, 1.0f, {}, {});
+    XMMATRIX rotate{ XMMatrixRotationRollPitchYaw(playerRotate.x, playerRotate.y, playerRotate.z) };
+    XMMATRIX trans{ XMMatrixTranslation(playerPosition.x, playerPosition.y, playerPosition.z) };
+    BBPlayer.Transform(BBPlayer, rotate * trans);
+
+    trans = XMMatrixTranslation(bulletPosition.x, bulletPosition.y, bulletPosition.z);
+    BBBullet.Transform(BBBullet, trans);
 
     return BBPlayer.Intersects(BBBullet);
 }

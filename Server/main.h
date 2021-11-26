@@ -70,7 +70,7 @@ DWORD WINAPI ProcessClientData(LPVOID arg);
 DWORD WINAPI CheckGameOver(LPVOID arg);
 
 // 그 외 함수
-bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 BulletPosition);
+bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 bulletPosition);
 void CheckBulletDeleted(ThreadFuncParam* param, int& msg);
 void CheckPlayerHit(ThreadFuncParam* param, int& msg);
 bool isGameOver();
