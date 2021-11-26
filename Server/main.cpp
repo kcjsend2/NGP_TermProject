@@ -215,8 +215,8 @@ bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOA
     BoundingOrientedBox BBPlayer{ playerPosition, XMFLOAT3{ 4.5f, 1.1f, 4.5f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };
     BoundingOrientedBox BBBullet{ BulletPosition, XMFLOAT3{ 1.1f, 1.1f, 1.1f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };
 
-    BBPlayer.Transform(BBPlayer, 1.0f, XMLoadFloat3(&playerRotate), {});
-    BBBullet.Transform(BBBullet, 1.0f, {}, {});
+    BBPlayer.Transform(BBPlayer, 1.0f, XMLoadFloat3(&playerRotate), {0.0f, 0.0f, 0.0f});
+    BBBullet.Transform(BBBullet, 1.0f, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f });
 
     return BBPlayer.Intersects(BBBullet);
 }
