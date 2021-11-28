@@ -109,10 +109,8 @@ void RecvPlayerInfo(const SOCKET& sock)
 
 DWORD WINAPI TransportData(LPVOID arg)
 {
-    WaitForSingleObject(g_events[1], INFINITE);
     SOCKET clientSock = (SOCKET)arg;
 
-    frequency++;
     int msgType = 0;
 
     // 시작 신호를 기다림
@@ -133,6 +131,8 @@ DWORD WINAPI TransportData(LPVOID arg)
 
     while (1)
     {
+        WaitForSingleObject(g_events[1], INFINITE);
+
         int sendMsg = PLAYER_UPDATE;
         if (send(clientSock, (char*)&sendMsg, sizeof(int), 0) == SOCKET_ERROR)
         {
@@ -146,8 +146,6 @@ DWORD WINAPI TransportData(LPVOID arg)
         // 분기, 플레이어 조작
         if (msgType & PLAYER_UPDATE)
         {
-            //ZeroMemory()??
-            //RecvPlayerInfo(0); 로 안 나누는 게 맞는 지 잘 모르겠음. 일단 계획서 살짝 고침.
             RecvPlayerInfo(clientSock);
         }
         if (msgType & PLAYER_HIT)
@@ -172,8 +170,6 @@ DWORD WINAPI TransportData(LPVOID arg)
 
     closesocket(clientSock);
 
-    DeleteCriticalSection(&g_cs);
-
     WSACleanup();
 
     return 0;
@@ -183,8 +179,6 @@ void InitNetworkSocket()
 {
     LPWSTR* szArgList;
     int argCount;
-
-    InitializeCriticalSection(&g_cs);
 
     szArgList = CommandLineToArgvW(GetCommandLine(), &argCount);
 
@@ -236,14 +230,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     LoadStringW(hInstance, IDC_CARSIMULATOR, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
+    g_events[0] = CreateEvent(NULL, TRUE, TRUE, TEXT("RENDER"));
+    g_events[1] = CreateEvent(NULL, TRUE, TRUE, TEXT("NETWORK"));
+
     // 애플리케이션 초기화를 수행합니다:
     if (!InitInstance(hInstance, nCmdShow))
     {
         return FALSE;
     }
-
-    g_events[0] = CreateEvent(NULL, TRUE, TRUE, TEXT("RENDER"));
-    g_events[1] = CreateEvent(NULL, TRUE, TRUE, TEXT("NETWORK"));
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CARSIMULATOR));
 
@@ -267,8 +261,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                 WaitForSingleObject(g_events[0], INFINITE);
 
             gGameFramework.FrameAdvance();
+            frequency++;
 
-            if (g_bGameStarted && frequency == 3)
+            if (g_bGameStarted && frequency > 2)
             {
                 frequency = 0;
                 ResetEvent(g_events[0]);
