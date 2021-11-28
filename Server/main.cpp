@@ -126,6 +126,35 @@ void RecvPlayerInfo(ThreadFuncParam* param)
     SendPlayerInfo(param, msg);
 }
 
+void SendPlayerInfo(ThreadFuncParam* param, int msg)
+{
+    // 메시지 송신 : 파라미터로 받은 msg에 PLAYER_UPDATE 패킷을 추가한다.
+    msg |= PLAYER_UPDATE;
+    send(param->sock, (char*)&msg, sizeof(int), 0);
+
+    // 플레이어 정보 구조체 송신
+    for (int i = 0; i < 3; ++i)
+    {
+        if (i == param->id) continue;
+        send(param->sock, (char*)&g_players[i], sizeof(PlayerData), 0);
+    }
+}
+
+void SendGameStart(ThreadFuncParam* param)
+{
+    // 메시지 송신
+    int msg{ GAME_START };
+    send(param->sock, (char*)&msg, sizeof(int), 0);
+
+    // 스폰 좌표 송신
+    XMFLOAT3 spawnPosition[]{
+        { 400.0f, 5.0f, 200.0f },
+        { 405.0f, 5.0f, 200.0f },
+        { 395.0f, 5.0f, 200.0f }
+    };
+    send(param->sock, (char*)&spawnPosition[param->id], sizeof(XMFLOAT3), 0);
+}
+
 DWORD WINAPI ProcessClientData(LPVOID arg)
 {
     ThreadFuncParam* param{ reinterpret_cast<ThreadFuncParam*>(arg) };
@@ -182,35 +211,6 @@ DWORD WINAPI CheckGameOver(LPVOID arg)
     return 0;
 }
 
-void SendPlayerInfo(ThreadFuncParam* param, int msg)
-{
-    // 메시지 송신 : 파라미터로 받은 msg에 PLAYER_UPDATE 패킷을 추가한다.
-    msg |= PLAYER_UPDATE;
-    send(param->sock, (char*)&msg, sizeof(int), 0);
-
-    // 플레이어 정보 구조체 송신
-    for (int i = 0; i < 3; ++i)
-    {
-        if (i == param->id) continue;
-        send(param->sock, (char*)&g_players[i], sizeof(PlayerData), 0);
-    }
-}
-
-void SendGameStart(ThreadFuncParam* param)
-{
-    // 메시지 송신
-    int msg{ GAME_START };
-    send(param->sock, (char*)&msg, sizeof(int), 0);
-
-    // 스폰 좌표 송신
-    XMFLOAT3 spawnPosition[]{
-        { 400.0f, 5.0f, 200.0f },
-        { 405.0f, 5.0f, 200.0f },
-        { 395.0f, 5.0f, 200.0f }
-    };
-    send(param->sock, (char*)&spawnPosition[param->id], sizeof(XMFLOAT3), 0);
-}
-
 void CheckBulletDeleted(ThreadFuncParam* param, int& msg)
 {
     for (int i = 0; i < g_players.size(); ++i)
@@ -229,11 +229,11 @@ void CheckPlayerHit(ThreadFuncParam* param, int& msg)
     for (int i = 0; i < g_players.size(); ++i)
     {
         if (param->id == i) continue;
-        //if (BulletCollisionCheck(g_players[param->id].position, g_players[param->id].rotate, g_players[i].bulletPosition))
-        //{
-        //    msg |= PLAYER_HIT;
-        //    break;
-        //}
+        if (BulletCollisionCheck(g_players[param->id].position, g_players[param->id].rotate, g_players[i].bulletPosition))
+        {
+            msg |= PLAYER_HIT;
+            break;
+        }
     }
 }
 
@@ -248,14 +248,17 @@ bool isGameOver()
     return false;
 }
 
-bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT4 playerRotate, XMFLOAT3 bulletPosition)
+bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 bulletPosition)
 {
     BoundingOrientedBox BBPlayer{ XMFLOAT3{}, XMFLOAT3{ 4.5f, 1.1f, 4.5f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };
     BoundingOrientedBox BBBullet{ XMFLOAT3{}, XMFLOAT3{ 1.1f, 1.1f, 1.1f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };
 
-    XMMATRIX rotate{ XMMatrixRotationQuaternion(XMLoadFloat4(&playerRotate)) };
+    XMMATRIX rotate{ XMMatrixRotationRollPitchYaw(playerRotate.x, playerRotate.y, playerRotate.z) };
     XMMATRIX trans{ XMMatrixTranslation(playerPosition.x, playerPosition.y, playerPosition.z) };
     BBPlayer.Transform(BBPlayer, rotate * trans);
+
+    trans = XMMatrixTranslation(bulletPosition.x, bulletPosition.y, bulletPosition.z);
+    BBBullet.Transform(BBBullet, trans);
 
     return BBPlayer.Intersects(BBBullet);
 }
