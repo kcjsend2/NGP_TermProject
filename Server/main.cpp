@@ -248,12 +248,12 @@ bool isGameOver()
     return false;
 }
 
-bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 bulletPosition)
+bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT4 playerRotate, XMFLOAT3 bulletPosition)
 {
     BoundingOrientedBox BBPlayer{ XMFLOAT3{}, XMFLOAT3{ 4.5f, 1.1f, 4.5f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };
     BoundingOrientedBox BBBullet{ XMFLOAT3{}, XMFLOAT3{ 1.1f, 1.1f, 1.1f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };
 
-    XMMATRIX rotate{ XMMatrixRotationRollPitchYaw(playerRotate.x, playerRotate.y, playerRotate.z) };
+    XMMATRIX rotate{ XMMatrixRotationQuaternion(XMLoadFloat4(&playerRotate)) };
     XMMATRIX trans{ XMMatrixTranslation(playerPosition.x, playerPosition.y, playerPosition.z) };
     BBPlayer.Transform(BBPlayer, rotate * trans);
 

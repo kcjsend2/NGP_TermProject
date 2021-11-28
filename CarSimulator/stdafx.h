@@ -78,7 +78,7 @@ inline void Swap(float* pfS, float* pfT) { float fTemp = *pfS; *pfS = *pfT; *pfT
 struct PlayerData
 {
 	XMFLOAT3 m_position; 	// 플레이어 위치
-	XMFLOAT3 m_rotate;		// 플레이어 회전 정보(pitch, yaw, roll)
+	XMFLOAT4 m_rotate;		// 플레이어 회전 정보- 쿼터니언
 	int m_life;			// 플레이어의 목숨 수
 	bool m_bHasBullet;		// 총알 유무
 	XMFLOAT3 m_bulletPosition;	// 총알 위치
@@ -86,13 +86,13 @@ struct PlayerData
 	PlayerData()
 	{
 		m_position = { 0.0f, 0.0f, 0.0f };
-		m_rotate = { 0.0f, 0.0f, 0.0f };
+		m_rotate = { 0.0f, 0.0f, 0.0f, 0.0f };
 		m_life = 0;
 		m_bHasBullet = false;
 		m_bulletPosition = { 0.0f, 0.0f, 0.0f };
 	}
 
-	PlayerData(XMFLOAT3 Position, XMFLOAT3 rotate, int life, bool hasBullet, XMFLOAT3 bulletPosition)
+	PlayerData(XMFLOAT3 Position, XMFLOAT4 rotate, int life, bool hasBullet, XMFLOAT3 bulletPosition)
 	{
 		m_position = Position;
 		m_rotate = rotate;

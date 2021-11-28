@@ -124,7 +124,7 @@ public:
 	void BulletInit();
 
 	XMFLOAT3 GetPlayerPosition() { return m_pPlayer->GetPosition(); }
-	XMFLOAT3 GetPlayerRotation()
+	XMFLOAT4 GetPlayerRotation()
 	{
 		XMFLOAT4X4 transform = m_pPlayer->GetWorldTransformMatrix();
 		float pitch = XMScalarASin(-transform._32);
@@ -136,7 +136,9 @@ public:
 		float roll = XMVectorGetX(res);
 		float yaw = XMVectorGetY(res);
 
-		return XMFLOAT3(pitch, yaw, roll);
+		auto quaternion = m_pPlayer->GetVehicle()->getChassisWorldTransform().getRotation();
+
+		return XMFLOAT4(quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
 	}
 	int GetPlayerLife() { return m_pPlayer->m_nLife; }
 	void PlayerHIt() { m_pPlayer->m_nLife--; }
@@ -159,5 +161,4 @@ private:
 
 public:
 	void InitNetworkSocket(CVehiclePlayer* pPlayer) { }
-	void SendPlayerInfo();
 };

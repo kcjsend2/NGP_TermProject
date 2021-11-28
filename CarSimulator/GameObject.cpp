@@ -364,15 +364,23 @@ void CGameObject::MoveForward(float fDistance)
 //게임 객체를 주어진 각도로 회전한다.
 void CGameObject::Rotate(float fPitch, float fYaw, float fRoll)
 {
-	XMMATRIX mtxPitch = XMMatrixRotationRollPitchYaw((fPitch), (0), (0));
-	XMMATRIX mtxYaw = XMMatrixRotationRollPitchYaw((0), (fYaw), (0));
-	XMMATRIX mtxRoll = XMMatrixRotationRollPitchYaw((0), (0), (fRoll));
-	m_xmf4x4World = Matrix4x4::Multiply(mtxYaw, m_xmf4x4World);
-	m_xmf4x4World = Matrix4x4::Multiply(mtxRoll, m_xmf4x4World);
-	m_fPitch = fPitch;
-	m_fYaw = fYaw;
-	m_fRoll = fRoll;
+	XMVECTOR vecRotate = XMQuaternionRotationRollPitchYaw(XMConvertToRadians(fPitch), XMConvertToRadians(fYaw), XMConvertToRadians(fRoll));
+	XMMATRIX mxtRotate = XMMatrixRotationQuaternion(vecRotate);
+
+	m_xmf4x4World = Matrix4x4::Multiply(mxtRotate, m_xmf4x4World);
 }
+
+//게임 객체를 주어진 각도로 회전한다.
+void CGameObject::Rotate(XMFLOAT4 xmf4Quaternion)
+{
+	XMVECTOR vecRotate = XMLoadFloat4(&xmf4Quaternion);
+	XMMATRIX mxtRotate = XMMatrixRotationQuaternion(vecRotate);
+
+	m_xmf4x4World = Matrix4x4::Multiply(mxtRotate, m_xmf4x4World);
+
+	m_xmf4Quaternion = xmf4Quaternion;
+}
+
 
 CRotatingObject::CRotatingObject(int nMeshes) : CGameObject(nMeshes)
 {

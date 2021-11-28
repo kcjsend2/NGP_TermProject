@@ -34,7 +34,7 @@ using namespace DirectX;
 struct PlayerData
 {
 	XMFLOAT3 position; 			// 플레이어 위치
-	XMFLOAT3 rotate;			// 플레이어 회전 정보(roll, pitch, yaw)
+	XMFLOAT4 rotate;			// 플레이어 회전 정보(roll, pitch, yaw)
 	int		 life;				// 플레이어의 목숨 수
 	bool	 hasBullet;			// 총알 유무
 	XMFLOAT3 bulletPosition;	// 총알 위치
@@ -44,7 +44,7 @@ struct PlayerData
 
 	}
 
-	PlayerData(XMFLOAT3 _position, XMFLOAT3 _rotate, int _life, bool _hasBullet, XMFLOAT3 _bulletPosition)
+	PlayerData(XMFLOAT3 _position, XMFLOAT4 _rotate, int _life, bool _hasBullet, XMFLOAT3 _bulletPosition)
 		: position{ _position }, rotate{ _rotate }, life{ _life }, hasBullet{ _hasBullet }, bulletPosition{ _bulletPosition }
 	{
 
@@ -70,7 +70,7 @@ DWORD WINAPI ProcessClientData(LPVOID arg);
 DWORD WINAPI CheckGameOver(LPVOID arg);
 
 // 그 외 함수
-bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT3 playerRotate, XMFLOAT3 bulletPosition);
+bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT4 playerRotate, XMFLOAT3 bulletPosition);
 void CheckBulletDeleted(ThreadFuncParam* param, int& msg);
 void CheckPlayerHit(ThreadFuncParam* param, int& msg);
 bool isGameOver();

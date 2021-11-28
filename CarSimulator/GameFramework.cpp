@@ -479,7 +479,7 @@ void CGameFramework::Update()
 	{
 		m_pOtherPlayer[i]->ResetRotate();
 		m_pOtherPlayer[i]->SetPosition(g_otherPlayersData[i].m_position);
-		m_pOtherPlayer[i]->Rotate(g_otherPlayersData[i].m_rotate.x, g_otherPlayersData[i].m_rotate.y, g_otherPlayersData[i].m_rotate.z);
+		m_pOtherPlayer[i]->Rotate(g_otherPlayersData[i].m_rotate);
 
 		m_pOtherPlayerBullet[i]->SetPosition(XMFLOAT3{0.0f, 0.0f, -300.0f});
 		if (g_otherPlayersData[i].m_bHasBullet)
