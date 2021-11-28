@@ -111,8 +111,8 @@ void RecvPlayerInfo(ThreadFuncParam* param)
 {
     RecvN(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
 
-    XMFLOAT3 playerPos = g_players[param->id].position;
-    cout << "PLAYER" << param->id << " : " << playerPos.x << ", " << playerPos.y << ", " << playerPos.z << endl;
+    //XMFLOAT3 playerPos = g_players[param->id].position;
+    //cout << "PLAYER" << param->id << " : " << playerPos.x << ", " << playerPos.y << ", " << playerPos.z << endl;
 
     int msg{ 0 };
 

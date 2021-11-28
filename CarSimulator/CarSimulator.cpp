@@ -4,9 +4,17 @@
 #include "stdafx.h"
 #include "CarSimulator.h"
 #include "GameFramework.h"
+#include <iostream>
+
+// 콘솔
+#ifdef UNICODE
+#pragma comment(linker, "/entry:wWinMainCRTStartup /subsystem:console")
+#else
+#pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console")
+#endif
 
 CGameFramework gGameFramework;
-int frequency = 0;
+int g_frequency = 0;
 
 #define MAX_LOADSTRING 100
 
@@ -77,6 +85,7 @@ int recvn(SOCKET s, char* buf, int len, int flags)
     }
     return (len - left);
 }
+
 void SendPlayerInfo(const SOCKET& sock)
 {
     PlayerData pSendData;
@@ -106,11 +115,8 @@ void RecvPlayerInfo(const SOCKET& sock)
     recvn(sock, (char*)&g_otherPlayersData[1], sizeof(PlayerData), 0);
 }
 
-
 DWORD WINAPI TransportData(LPVOID arg)
 {
-    SOCKET clientSock = (SOCKET)arg;
-
     int msgType = 0;
 
     // 시작 신호를 기다림
@@ -131,8 +137,7 @@ DWORD WINAPI TransportData(LPVOID arg)
 
     while (1)
     {
-        auto hResult = WaitForSingleObject(g_events[1], INFINITE);
-        OutputDebugString(L"네트워크\n");
+        WaitForSingleObject(g_events[1], INFINITE);
 
         int sendMsg = PLAYER_UPDATE;
         if (send(clientSock, (char*)&sendMsg, sizeof(int), 0) == SOCKET_ERROR)
@@ -240,6 +245,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
+    g_events[0] = CreateEvent(NULL, TRUE, TRUE, TEXT("RENDER"));
+    g_events[1] = CreateEvent(NULL, TRUE, FALSE, TEXT("NETWORK"));
+
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CARSIMULATOR));
 
     MSG msg;
@@ -258,18 +266,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
         else
         {
+            // 렌더링 쓰레드 차례가 될 때까지 대기
             if (g_bGameStarted)
             {
-                auto hResult = WaitForSingleObject(g_events[0], INFINITE);
+                WaitForSingleObject(g_events[0], INFINITE);
+                std::cout << "렌더링 : " << g_frequency << std::endl;
+                ++g_frequency;
             }
 
-            OutputDebugString(L"렌더\n");
+            // 렌더링
             gGameFramework.FrameAdvance();
             frequency++;
 
-            if (g_bGameStarted && frequency > 2)
+            // 데이터 송신을 3번 했다면 데이터 송신 차례?
+            if (g_bGameStarted && g_frequency == 3)
             {
-                frequency = 0;
+                std::cout << "송신" << std::endl << std::endl;
+                g_frequency = 0;
                 ResetEvent(g_events[0]);
                 SetEvent(g_events[1]);
             }
