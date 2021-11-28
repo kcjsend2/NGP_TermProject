@@ -492,12 +492,16 @@ void CVehiclePlayer::Update(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList*
 			FireBullet(pd3dDevice, pd3dCommandList, pbtDynamicsWorld);
 	}
 
-	if (m_bEraseBullet)
+	if (m_nNextFrameMsg & BULLET_DELETED)
 	{
-		m_bEraseBullet = FALSE;
 		EraseBullet();
 	}
-
+	if (m_nNextFrameMsg & PLAYER_HIT)
+	{
+		m_nLife--;
+		SetRigidBodyPosition(m_xmf3SpawnPosition);
+	}
+	m_nNextFrameMsg = 0;
 
 	int wheelIndex = 2;
 	m_vehicle->applyEngineForce(m_gEngineForce, wheelIndex);
@@ -629,12 +633,18 @@ void CVehiclePlayer::FireBullet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandL
 	m_pBullet = std::make_shared<CBullet>(pd3dDevice, pd3dCommandList, m_xmf3Position, m_vehicle->getForwardVector(), pbtDynamicsWorld);
 }
 
+void CVehiclePlayer::SetSpawPosition(XMFLOAT3 xmf3Position)
+{
+	m_xmf3SpawnPosition = xmf3Position;
+}
+
 void CVehiclePlayer::SetRigidBodyPosition(XMFLOAT3 xmf3Position)
 {
 	btTransform btCenterOfMassTransform;
 	btCenterOfMassTransform.setIdentity();
 	btCenterOfMassTransform.setOrigin(btVector3(xmf3Position.x, xmf3Position.y, xmf3Position.z));
 	m_vehicle->getRigidBody()->setCenterOfMassTransform(btCenterOfMassTransform);
+
 }
 
 CVehiclePlayer::CWheel::CWheel(std::shared_ptr<CMeshFileRead> pWheelMesh)

@@ -107,6 +107,7 @@ void RecvGameStart(const SOCKET& sock)
     recvn(sock, (char*)&StartPos, sizeof(XMFLOAT3), 0);
 
     gGameFramework.m_pPlayer->SetRigidBodyPosition(StartPos);
+    gGameFramework.m_pPlayer->SetSpawPosition(StartPos);
 }
 
 void RecvPlayerInfo(const SOCKET& sock)
@@ -150,18 +151,11 @@ DWORD WINAPI TransportData(LPVOID arg)
 
         recvn(clientSock, (char*)&msgType, sizeof(int), 0);
 
+        gGameFramework.m_pPlayer->SetNextFrameMessage(msgType);
         // 분기, 플레이어 조작
         if (msgType & PLAYER_UPDATE)
         {
             RecvPlayerInfo(clientSock);
-        }
-        if (msgType & PLAYER_HIT)
-        {
-            gGameFramework.PlayerHIt();
-        }
-        if (msgType & BULLET_DELETED)
-        {
-            gGameFramework.m_pPlayer->SetNextFrameBulletErase();
         }
         if (msgType & GAME_OVER)
         {

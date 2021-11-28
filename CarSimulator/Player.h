@@ -142,8 +142,10 @@ public:
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	virtual CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed);
 	void FireBullet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, btDiscreteDynamicsWorld* pbtDynamicsWorld);
+	void SetSpawPosition(XMFLOAT3 xmf3Position);
+	XMFLOAT3 GetSpawnPosition() { return m_xmf3SpawnPosition; }
 	void EraseBullet() { m_pBullet = NULL; }
-	void SetNextFrameBulletErase() { m_bEraseBullet = TRUE; }
+	void SetNextFrameMessage(int msg) { m_nNextFrameMsg = msg; }
 	std::shared_ptr<CBullet> GetBullet() { return m_pBullet; };
 	std::shared_ptr<CWheel>* GetWheels() { return m_pWheel; }
 	btRaycastVehicle* GetVehicle() { return m_vehicle; }
@@ -152,13 +154,15 @@ public:
 private:
 	std::shared_ptr<CWheel> m_pWheel[4];
 
+	XMFLOAT3 m_xmf3SpawnPosition;
+
 	btRaycastVehicle::btVehicleTuning m_tuning;
 	btVehicleRaycaster* m_vehicleRayCaster;
 	btRaycastVehicle* m_vehicle;
 
 	std::shared_ptr<CBullet> m_pBullet;
 
-	bool m_bEraseBullet = false;
+	int m_nNextFrameMsg = 0;
 
 	float m_gEngineForce = 0.f;
 
