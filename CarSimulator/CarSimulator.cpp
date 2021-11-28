@@ -117,6 +117,7 @@ void RecvPlayerInfo(const SOCKET& sock)
 
 DWORD WINAPI TransportData(LPVOID arg)
 {
+    SOCKET clientSock = (SOCKET)arg;
     int msgType = 0;
 
     // 시작 신호를 기다림
@@ -276,7 +277,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
             // 렌더링
             gGameFramework.FrameAdvance();
-            frequency++;
+            g_frequency++;
 
             // 데이터 송신을 3번 했다면 데이터 송신 차례?
             if (g_bGameStarted && g_frequency == 3)
