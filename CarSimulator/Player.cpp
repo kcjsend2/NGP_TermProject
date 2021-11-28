@@ -492,6 +492,12 @@ void CVehiclePlayer::Update(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList*
 			FireBullet(pd3dDevice, pd3dCommandList, pbtDynamicsWorld);
 	}
 
+	if (m_bEraseBullet)
+	{
+		m_bEraseBullet = FALSE;
+		EraseBullet();
+	}
+
 
 	int wheelIndex = 2;
 	m_vehicle->applyEngineForce(m_gEngineForce, wheelIndex);

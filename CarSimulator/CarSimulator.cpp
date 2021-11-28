@@ -161,7 +161,7 @@ DWORD WINAPI TransportData(LPVOID arg)
         }
         if (msgType & BULLET_DELETED)
         {
-            gGameFramework.m_pPlayer->EraseBullet();
+            gGameFramework.m_pPlayer->SetNextFrameBullet();
         }
         if (msgType & GAME_OVER)
         {
@@ -277,10 +277,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
             // 렌더링
             gGameFramework.FrameAdvance();
-            g_frequency++;
 
             // 데이터 송신을 3번 했다면 데이터 송신 차례?
-            if (g_bGameStarted && g_frequency == 3)
+            if (g_bGameStarted && g_frequency > 2)
             {
                 std::cout << "송신" << std::endl << std::endl;
                 g_frequency = 0;
