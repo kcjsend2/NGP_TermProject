@@ -131,7 +131,8 @@ DWORD WINAPI TransportData(LPVOID arg)
 
     while (1)
     {
-        WaitForSingleObject(g_events[1], INFINITE);
+        auto hResult = WaitForSingleObject(g_events[1], INFINITE);
+        OutputDebugString(L"네트워크\n");
 
         int sendMsg = PLAYER_UPDATE;
         if (send(clientSock, (char*)&sendMsg, sizeof(int), 0) == SOCKET_ERROR)
@@ -231,7 +232,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MyRegisterClass(hInstance);
 
     g_events[0] = CreateEvent(NULL, TRUE, TRUE, TEXT("RENDER"));
-    g_events[1] = CreateEvent(NULL, TRUE, TRUE, TEXT("NETWORK"));
+    g_events[1] = CreateEvent(NULL, TRUE, FALSE, TEXT("NETWORK"));
 
     // 애플리케이션 초기화를 수행합니다:
     if (!InitInstance(hInstance, nCmdShow))
@@ -257,9 +258,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
         else
         {
-            if(g_bGameStarted)
-                WaitForSingleObject(g_events[0], INFINITE);
+            if (g_bGameStarted)
+            {
+                auto hResult = WaitForSingleObject(g_events[0], INFINITE);
+            }
 
+            OutputDebugString(L"렌더\n");
             gGameFramework.FrameAdvance();
             frequency++;
 
