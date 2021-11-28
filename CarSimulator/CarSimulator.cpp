@@ -161,7 +161,7 @@ DWORD WINAPI TransportData(LPVOID arg)
         }
         if (msgType & BULLET_DELETED)
         {
-            gGameFramework.m_pPlayer->SetNextFrameBullet();
+            gGameFramework.m_pPlayer->SetNextFrameBulletErase();
         }
         if (msgType & GAME_OVER)
         {
