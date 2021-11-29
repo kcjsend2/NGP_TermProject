@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 // C++
+#include <algorithm>
 #include <array>
 #include <fstream>
 #include <iostream>
@@ -29,7 +30,7 @@ using namespace DirectX;
 // 서버 포트
 #define SERVER_PORT		9000
 
-// 구조체 선언
+// 플레이어 정보 구조체
 #pragma pack(1)
 struct PlayerData
 {
@@ -51,26 +52,27 @@ struct PlayerData
 	}
 };
 
+// 플레이어 정보 수송신 쓰레드 함수 파라미터
 struct ThreadFuncParam
 {
 	int     id;
 	SOCKET  sock;
 };
 
-// 수신 함수
-int RecvN(const SOCKET& socket, char* buffer, int length, int flags);
-void RecvPlayerInfo(ThreadFuncParam* param);
-
-// 송신 함수
-void SendGameStart(ThreadFuncParam* param);
-void SendPlayerInfo(ThreadFuncParam* param, int msg);
-
 // 쓰레드 함수
 DWORD WINAPI ProcessClientData(LPVOID arg);
 DWORD WINAPI CheckGameOver(LPVOID arg);
 
+// 수신 함수
+int RecvN(const SOCKET& socket, char* buffer, int length, int flags);
+void RecvPlayerInfo(int index);
+
+// 송신 함수
+void SendGameStart(int index);
+void SendPlayerInfo(int index);
+
 // 그 외 함수
-bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT4 playerRotate, XMFLOAT3 bulletPosition);
-void CheckBulletDeleted(ThreadFuncParam* param, int& msg);
-void CheckPlayerHit(ThreadFuncParam* param, int& msg);
+bool isCollided(int playerIndex, int bulletIndex);
+bool isBulletHit(int index);
+bool isPlayerHit(int index);
 bool isGameOver();
