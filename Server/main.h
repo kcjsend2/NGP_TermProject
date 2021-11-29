@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 // C++
+#include <algorithm>
 #include <array>
 #include <fstream>
 #include <iostream>
@@ -57,6 +58,10 @@ struct ThreadFuncParam
 	SOCKET  sock;
 };
 
+// 쓰레드 함수
+DWORD WINAPI ProcessClientData(LPVOID arg);
+DWORD WINAPI CheckGameOver(LPVOID arg);
+
 // 수신 함수
 int RecvN(const SOCKET& socket, char* buffer, int length, int flags);
 void RecvPlayerInfo(ThreadFuncParam* param);
@@ -65,12 +70,8 @@ void RecvPlayerInfo(ThreadFuncParam* param);
 void SendGameStart(ThreadFuncParam* param);
 void SendPlayerInfo(ThreadFuncParam* param, int msg);
 
-// 쓰레드 함수
-DWORD WINAPI ProcessClientData(LPVOID arg);
-DWORD WINAPI CheckGameOver(LPVOID arg);
-
 // 그 외 함수
-bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT4 playerRotate, XMFLOAT3 bulletPosition);
-void CheckBulletDeleted(ThreadFuncParam* param, int& msg);
-void CheckPlayerHit(ThreadFuncParam* param, int& msg);
+bool isCollided(int playerIndex, int bulletIndex);
+bool isBulletHit(int index);
+bool isPlayerHit(int index);
 bool isGameOver();
