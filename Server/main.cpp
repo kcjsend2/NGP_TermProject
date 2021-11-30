@@ -78,81 +78,23 @@ int main()
     // 플레이어 정보 송수신 쓰레드가 종료될 때까지 대기한다 : 이 경우엔 게임이 끝난 것이다.
     WaitForMultipleObjects(g_threads.size(), g_threads.data(), TRUE, INFINITE);
 
-    // 메시지 송신
+    // 게임 종료 메시지 송신
     int msg{ GAME_OVER };
     for (const SOCKET& s : clientSock)
     {
         send(s, (char*)&msg, sizeof(int), 0);
-        closesocket(s);
     }
+
+    // 클라이언트에서 게임 종료 메시지를 받으면 소켓 종료
+    for (const SOCKET& s : clientSock)
+    {
+        RecvN(s, (char*)&msg, sizeof(int), 0);
+        if (msg & GAME_OVER)
+            closesocket(s);
+    }
+
     closesocket(sock);
     WSACleanup();
-}
-
-int RecvN(const SOCKET& socket, char* buffer, int length, int flags)
-{
-    char* ptr{ buffer };
-    int received{ 0 }, left{ length };
-
-    while (left > 0)
-    {
-        received = recv(socket, ptr, left, flags);
-        if (received == SOCKET_ERROR)
-            return SOCKET_ERROR;
-        if (received == 0)
-            break;
-        left -= received;
-        ptr += received;
-    }
-    return length - left;
-}
-
-void RecvPlayerInfo(ThreadFuncParam* param)
-{
-    RecvN(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
-
-    //XMFLOAT3 playerPos = g_players[param->id].position;
-    //cout << "PLAYER" << param->id << " : " << playerPos.x << ", " << playerPos.y << ", " << playerPos.z << endl;
-
-    int msg{ 0 };
-
-    // 내 총알이 남을 피격시켰는 지 검사
-    CheckBulletDeleted(param, msg);
-
-    // 내가 남의 총알에 피격당했는 지 검사
-    CheckPlayerHit(param, msg);
-
-    // 다른 플레이어에게 이 플레이어의 정보를 송신한다.
-    SendPlayerInfo(param, msg);
-}
-
-void SendPlayerInfo(ThreadFuncParam* param, int msg)
-{
-    // 메시지 송신 : 파라미터로 받은 msg에 PLAYER_UPDATE 패킷을 추가한다.
-    msg |= PLAYER_UPDATE;
-    send(param->sock, (char*)&msg, sizeof(int), 0);
-
-    // 플레이어 정보 구조체 송신
-    for (int i = 0; i < 3; ++i)
-    {
-        if (i == param->id) continue;
-        send(param->sock, (char*)&g_players[i], sizeof(PlayerData), 0);
-    }
-}
-
-void SendGameStart(ThreadFuncParam* param)
-{
-    // 메시지 송신
-    int msg{ GAME_START };
-    send(param->sock, (char*)&msg, sizeof(int), 0);
-
-    // 스폰 좌표 송신
-    XMFLOAT3 spawnPosition[]{
-        { 400.0f, 5.0f, 200.0f },
-        { 405.0f, 5.0f, 200.0f },
-        { 395.0f, 5.0f, 200.0f }
-    };
-    send(param->sock, (char*)&spawnPosition[param->id], sizeof(XMFLOAT3), 0);
 }
 
 DWORD WINAPI ProcessClientData(LPVOID arg)
@@ -211,54 +153,135 @@ DWORD WINAPI CheckGameOver(LPVOID arg)
     return 0;
 }
 
-void CheckBulletDeleted(ThreadFuncParam* param, int& msg)
+int RecvN(const SOCKET& socket, char* buffer, int length, int flags)
 {
-    for (int i = 0; i < g_players.size(); ++i)
+    char* ptr{ buffer };
+    int received{ 0 }, left{ length };
+
+    while (left > 0)
     {
-        if (param->id == i) continue;
-        if (BulletCollisionCheck(g_players[i].position, g_players[i].rotate, g_players[param->id].bulletPosition))
-        {
-            msg |= BULLET_DELETED;
+        received = recv(socket, ptr, left, flags);
+        if (received == SOCKET_ERROR)
+            return SOCKET_ERROR;
+        if (received == 0)
             break;
-        }
+        left -= received;
+        ptr += received;
     }
+    return length - left;
 }
 
-void CheckPlayerHit(ThreadFuncParam* param, int& msg)
+void RecvPlayerInfo(ThreadFuncParam* param)
 {
-    for (int i = 0; i < g_players.size(); ++i)
-    {
-        if (param->id == i) continue;
-        if (BulletCollisionCheck(g_players[param->id].position, g_players[param->id].rotate, g_players[i].bulletPosition))
-        {
-            msg |= PLAYER_HIT;
-            break;
-        }
-    }
+    RecvN(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
+
+    int msg{ NULL };
+
+    // 남의 총알에 피격당했는 지 검사
+    if (isPlayerHit(param->id))
+        msg |= PLAYER_HIT;
+
+    // 총알이 남을 피격시켰는 지 검사
+    if (isBulletHit(param->id))
+        msg |= BULLET_DELETED;
+
+    // 다른 플레이어에게 이 플레이어의 정보를 송신한다.
+    SendPlayerInfo(param, msg);
 }
 
-bool isGameOver()
+void SendPlayerInfo(ThreadFuncParam* param, int msg)
 {
-    int cnt = 0;
+    // 메시지 송신 : 파라미터로 받은 msg에 PLAYER_UPDATE 패킷을 추가한다.
+    msg |= PLAYER_UPDATE;
+    send(param->sock, (char*)&msg, sizeof(int), 0);
+
+    // 플레이어 정보 구조체 송신
     for (int i = 0; i < 3; ++i)
-        if (g_players[i].life != 0)
-            ++cnt;
-    if (cnt <= 1)
-        return true;
-    return false;
+    {
+        if (i == param->id) continue;
+        send(param->sock, (char*)&g_players[i], sizeof(PlayerData), 0);
+    }
 }
 
-bool BulletCollisionCheck(XMFLOAT3 playerPosition, XMFLOAT4 playerRotate, XMFLOAT3 bulletPosition)
+void SendGameStart(ThreadFuncParam* param)
 {
+    // 메시지 송신
+    int msg{ GAME_START };
+    send(param->sock, (char*)&msg, sizeof(int), 0);
+
+    // 스폰 좌표 송신
+    XMFLOAT3 spawnPosition[]{
+        { 400.0f, 5.0f, 200.0f },
+        { 405.0f, 5.0f, 200.0f },
+        { 395.0f, 5.0f, 200.0f }
+    };
+    send(param->sock, (char*)&spawnPosition[param->id], sizeof(XMFLOAT3), 0);
+}
+
+bool isCollided(int playerIndex, int bulletIndex)
+{
+    /*
+    * isCollided 함수에서는 다음과 같은 일을 수행한다.
+    * 1. 플레이어 인덱스와 총알 인덱스를 이용해서 플레이어의 위치, 회전 정보와 총알 위치 정보를 가져온다.
+    * 2. 플레이어 바운딩박스를 만든다.
+    * 3. 총알 바운딩박스를 만든다.
+    * 4. 충돌 검사 결과를 반환한다.
+    */
+
     BoundingOrientedBox BBPlayer{ XMFLOAT3{}, XMFLOAT3{ 4.5f, 1.1f, 4.5f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };
     BoundingOrientedBox BBBullet{ XMFLOAT3{}, XMFLOAT3{ 1.1f, 1.1f, 1.1f }, XMFLOAT4{ 0.0f, 0.0f, 0.0f, 1.0f } };
 
+    // 플레이어 위치, 회전, 총알 위치
+    XMFLOAT4 playerRotate{ g_players[playerIndex].rotate };
+    XMFLOAT3 playerPosition{ g_players[playerIndex].position };
+    XMFLOAT3 bulletPosition{ g_players[bulletIndex].bulletPosition };
+
+    // 플레이어 바운딩박스
     XMMATRIX rotate{ XMMatrixRotationQuaternion(XMLoadFloat4(&playerRotate)) };
     XMMATRIX trans{ XMMatrixTranslation(playerPosition.x, playerPosition.y, playerPosition.z) };
     BBPlayer.Transform(BBPlayer, rotate * trans);
 
+    // 총알 바운딩박스
     trans = XMMatrixTranslation(bulletPosition.x, bulletPosition.y, bulletPosition.z);
     BBBullet.Transform(BBBullet, trans);
 
     return BBPlayer.Intersects(BBBullet);
+}
+
+bool isPlayerHit(int playerIndex)
+{
+    for (int i = 0; i < g_players.size(); ++i)
+    {
+        if (i == playerIndex) continue;
+        if (g_players[i].hasBullet && isCollided(playerIndex, i))
+            return true;
+    }
+    return false;
+}
+
+bool isBulletHit(int bulletIndex)
+{
+    if (g_players[bulletIndex].hasBullet)
+        return false;
+
+    for (int i = 0; i < g_players.size(); ++i)
+    {
+        if (i == bulletIndex) continue;
+        if (isCollided(i, bulletIndex))
+            return true;
+    }
+    return false;
+}
+
+bool isGameOver()
+{
+    // 생존자 수
+    int nSurvivor = count_if(g_players.begin(), g_players.end(), [](const auto& p) {
+        if (p.life > 0)
+            return true;
+        return false;
+        });
+
+    // 생존자가 1명 이하일 경우 게임 종료
+    return nSurvivor <= 1 ? true : false;
 }
