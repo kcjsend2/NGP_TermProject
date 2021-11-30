@@ -78,13 +78,21 @@ int main()
     // 플레이어 정보 송수신 쓰레드가 종료될 때까지 대기한다 : 이 경우엔 게임이 끝난 것이다.
     WaitForMultipleObjects(g_threads.size(), g_threads.data(), TRUE, INFINITE);
 
-    // 메시지 송신
+    // 게임 종료 메시지 송신
     int msg{ GAME_OVER };
     for (const SOCKET& s : clientSock)
     {
         send(s, (char*)&msg, sizeof(int), 0);
-        closesocket(s);
     }
+
+    // 클라이언트에서 게임 종료 메시지를 받으면 소켓 종료
+    for (const SOCKET& s : clientSock)
+    {
+        RecvN(s, (char*)&msg, sizeof(int), 0);
+        if (msg & GAME_OVER)
+            closesocket(s);
+    }
+
     closesocket(sock);
     WSACleanup();
 }
@@ -167,9 +175,6 @@ void RecvPlayerInfo(ThreadFuncParam* param)
 {
     RecvN(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
 
-    //XMFLOAT3 playerPos = g_players[param->id].position;
-    //cout << "PLAYER" << param->id << " : " << playerPos.x << ", " << playerPos.y << ", " << playerPos.z << endl;
-
     int msg{ NULL };
 
     // 남의 총알에 피격당했는 지 검사
@@ -178,10 +183,7 @@ void RecvPlayerInfo(ThreadFuncParam* param)
 
     // 총알이 남을 피격시켰는 지 검사
     if (isBulletHit(param->id))
-    {
-        g_players[param->id].hasBullet = false;
         msg |= BULLET_DELETED;
-    }
 
     // 다른 플레이어에게 이 플레이어의 정보를 송신한다.
     SendPlayerInfo(param, msg);
