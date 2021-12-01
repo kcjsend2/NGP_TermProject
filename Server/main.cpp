@@ -4,7 +4,7 @@
 array<HANDLE, 4> g_events;      // 쓰레드 동기화를 위한 이벤트 객체
 array<HANDLE, 3> g_threads;     // 플레이어 정보 송수신 쓰레드 핸들
 array<PlayerData, 3> g_players; // 플레이어 정보
-array<array<bool, 3>, 3> g_bWasIntesected = { FALSE, FALSE, FALSE };
+array<bool, 3> g_bWasIntesected = { FALSE };
 
 int main()
 {
@@ -138,12 +138,9 @@ DWORD WINAPI CheckGameOver(LPVOID arg)
 
         for (int i = 0; i < 3; ++i)
         {
-            for (int j = 0; j < 3; ++j)
+            if (g_players[i].hasBullet == FALSE)
             {
-                if (g_players[j].hasBullet == FALSE)
-                {
-                    g_bWasIntesected[i][j] = FALSE;
-                }
+                g_bWasIntesected[i] = FALSE;
             }
         }
 
@@ -266,10 +263,9 @@ bool isPlayerHit(int playerIndex)
 {
     for (int i = 0; i < g_players.size(); ++i)
     {
-        if (i == playerIndex || g_bWasIntesected[playerIndex][i] == TRUE) continue;
+        if (i == playerIndex || g_bWasIntesected[i] == TRUE) continue;
         if (g_players[i].hasBullet && isCollided(playerIndex, i))
         {
-            g_bWasIntesected[playerIndex][i] = TRUE;
             return true;
         }
     }
@@ -285,7 +281,10 @@ bool isBulletHit(int bulletIndex)
     {
         if (i == bulletIndex) continue;
         if (isCollided(i, bulletIndex))
+        {
+            g_bWasIntesected[i] = TRUE;
             return true;
+        }
     }
     return false;
 }
