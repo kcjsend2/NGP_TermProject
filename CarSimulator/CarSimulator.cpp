@@ -7,11 +7,11 @@
 #include <iostream>
 
 // 콘솔
-#ifdef UNICODE
-#pragma comment(linker, "/entry:wWinMainCRTStartup /subsystem:console")
-#else
-#pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console")
-#endif
+//#ifdef UNICODE
+//#pragma comment(linker, "/entry:wWinMainCRTStartup /subsystem:console")
+//#else
+//#pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console")
+//#endif
 
 CGameFramework gGameFramework;
 int g_frequency = 0;
@@ -23,9 +23,10 @@ HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 
-std::array<HANDLE, 2> g_events;
-bool g_bGameStarted = false;
-bool IsWin = false;
+std::array<HANDLE, 2> g_events;                 // 렌더, 송신 쓰레드 동기화 이벤트
+bool g_bGameStarted = false;                    // 게임이 시작되면 true로 바뀜
+bool g_bGameOver = false;                       // 게임이 종료되면 true로 바뀜
+bool g_isWin = false;                           // 게임 종료 시점에 목숨이 1이상이면 true, 그 외에는 false
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -122,7 +123,7 @@ void RecvPlayerInfo(const SOCKET& sock)
 void RecvGameOver(const SOCKET& sock)
 {
     int GameOverMsg{ GAME_OVER };
-    if(IsWin)
+    if (g_isWin)
         MessageBox(NULL, TEXT("승리"), TEXT("게임종료"), 0);
     else
         MessageBox(NULL, TEXT("패배"), TEXT("게임종료"), 0);
@@ -165,6 +166,7 @@ DWORD WINAPI TransportData(LPVOID arg)
         recvn(clientSock, (char*)&msgType, sizeof(int), 0);
 
         gGameFramework.m_pPlayer->SetNextFrameMessage(msgType);
+
         // 분기, 플레이어 조작
         if (msgType & PLAYER_UPDATE)
         {
@@ -172,8 +174,11 @@ DWORD WINAPI TransportData(LPVOID arg)
         }
         if (msgType & GAME_OVER)
         {
-            if (gGameFramework.GetPlayerLife() > 0) IsWin = true;
+            if (gGameFramework.GetPlayerLife() > 0) g_isWin = true;
             RecvGameOver(clientSock);
+            ResetEvent(g_events[1]);
+            SetEvent(g_events[0]);
+            g_bGameOver = true;
             break;
         }
 
@@ -260,7 +265,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MSG msg;
 
     // 기본 메시지 루프입니다:
-    while (1)
+    while (!g_bGameOver)
     {
         if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
