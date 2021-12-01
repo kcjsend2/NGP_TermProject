@@ -25,7 +25,6 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름�
 
 std::array<HANDLE, 2> g_events;
 bool g_bGameStarted = false;
-bool g_bGameOver = false;
 bool IsWin = false;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
@@ -175,7 +174,6 @@ DWORD WINAPI TransportData(LPVOID arg)
         {
             if (gGameFramework.GetPlayerLife() > 0) IsWin = true;
             RecvGameOver(clientSock);
-            g_bGameOver = TRUE;
             break;
         }
 
@@ -278,7 +276,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             // 렌더링 쓰레드 차례가 될 때까지 대기
             if (g_bGameStarted)
             {
-                WaitForSingleObject(g_events[0], 1000);
+                WaitForSingleObject(g_events[0], INFINITE);
                 ++g_frequency;
             }
 
@@ -292,16 +290,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                 ResetEvent(g_events[0]);
                 SetEvent(g_events[1]);
             }
-
-            if (g_bGameOver)
-            {
-                break;
-            }
         }
     }
     gGameFramework.OnDestroy();
 
-    return 0;
+    return (int)msg.wParam;
 }
 
 
