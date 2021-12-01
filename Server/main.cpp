@@ -261,7 +261,7 @@ bool isPlayerHit(int playerIndex)
 
 bool isBulletHit(int bulletIndex)
 {
-    if (g_players[bulletIndex].hasBullet)
+    if (!g_players[bulletIndex].hasBullet)
         return false;
 
     for (int i = 0; i < g_players.size(); ++i)
