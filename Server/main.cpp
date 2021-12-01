@@ -5,6 +5,7 @@ array<HANDLE, 4> g_events;      // 쓰레드 동기화를 위한 이벤트 객체
 array<HANDLE, 3> g_threads;     // 플레이어 정보 송수신 쓰레드 핸들
 array<PlayerData, 3> g_players; // 플레이어 정보
 array<array<bool, 3>, 3> g_bWasIntesected = { FALSE, FALSE, FALSE };
+
 int main()
 {
     WSADATA wsa;
@@ -135,6 +136,17 @@ DWORD WINAPI CheckGameOver(LPVOID arg)
         // 게임 종료 체크 이벤트가 활성화 될 때까지 대기
         WaitForSingleObject(g_events[3], INFINITE);
 
+        for (int i = 0; i < 3; ++i)
+        {
+            for (int j = 0; j < 3; ++j)
+            {
+                if (g_players[j].hasBullet == FALSE)
+                {
+                    g_bWasIntesected[i][j] = FALSE;
+                }
+            }
+        }
+
         // 게임이 종료됬다면 플레이어 정보 송수신 쓰레드 강제 종료
         if (isGameOver())
         {
@@ -175,14 +187,6 @@ void RecvPlayerInfo(ThreadFuncParam* param)
 {
     RecvN(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
     int msg{ NULL };
-
-    for (int i = 0; i < 3; ++i)
-    {
-        if (g_players[param->id].hasBullet == FALSE)
-        {
-            g_bWasIntesected[param->id][i] = FALSE;
-        }
-    }
 
     if (g_players[param->id].life > 0)
     {
@@ -265,7 +269,6 @@ bool isPlayerHit(int playerIndex)
         if (i == playerIndex || g_bWasIntesected[playerIndex][i] == TRUE) continue;
         if (g_players[i].hasBullet && isCollided(playerIndex, i))
         {
-            // playerIndex번 플레이어가 i번 플레이어에게 맞음
             g_bWasIntesected[playerIndex][i] = TRUE;
             return true;
         }
