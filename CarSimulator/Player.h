@@ -119,7 +119,7 @@ public:
 	//플레이어의 카메라가 3인칭 카메라일 때 플레이어(메쉬)를 렌더링한다.
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera = NULL);
 
-	int m_nLife = 3;
+	int m_nLife = 10;
 };
 
 class CVehiclePlayer : public CPlayer

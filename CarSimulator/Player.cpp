@@ -519,6 +519,12 @@ void CVehiclePlayer::Update(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList*
 	}
 	m_nNextFrameMsg = 0;
 
+	if (m_xmf3Position.z < -500)
+	{
+		m_nLife--;
+		SetRigidBodyPosition(m_xmf3SpawnPosition);
+	}
+
 	int wheelIndex = 2;
 	m_vehicle->applyEngineForce(m_fEngineForce, wheelIndex);
 	m_vehicle->setBrake(m_fBreakingForce, wheelIndex);
