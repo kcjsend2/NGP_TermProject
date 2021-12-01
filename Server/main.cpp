@@ -184,9 +184,12 @@ void RecvPlayerInfo(ThreadFuncParam* param)
         }
     }
 
-    // 남의 총알에 피격당했는 지 검사
-    if (isPlayerHit(param->id))
-        msg |= PLAYER_HIT;
+    if (g_players[param->id].life > 0)
+    {
+        // 남의 총알에 피격당했는 지 검사
+        if (isPlayerHit(param->id))
+            msg |= PLAYER_HIT;
+    }
 
     // 총알이 남을 피격시켰는 지 검사
     if (isBulletHit(param->id))

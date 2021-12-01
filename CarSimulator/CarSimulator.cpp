@@ -95,6 +95,9 @@ void SendPlayerInfo(const SOCKET& sock)
     else
         pSendData = PlayerData{ gGameFramework.GetPlayerPosition(), gGameFramework.GetPlayerRotation(), gGameFramework.GetPlayerLife(), TRUE, bullet->GetPosition() };
 
+    if (gGameFramework.GetPlayerLife() == 0)
+        pSendData.m_position = { 0, 0, -300 };
+
     if(send(sock, (char*)&pSendData, sizeof(PlayerData), 0) == SOCKET_ERROR)
     {
         err_quit("send()");
