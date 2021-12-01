@@ -116,6 +116,16 @@ void RecvPlayerInfo(const SOCKET& sock)
     recvn(sock, (char*)&g_otherPlayersData[1], sizeof(PlayerData), 0);
 }
 
+void RecvGameOver(const SOCKET& sock)
+{
+    int GameOverMsg{ GAME_OVER };
+    if(IsWin)
+        MessageBox(NULL, TEXT("승리"), TEXT("게임종료"), 0);
+    else
+        MessageBox(NULL, TEXT("패배"), TEXT("게임종료"), 0);
+    send(sock, (char*)&GameOverMsg, sizeof(int), 0);
+}
+
 DWORD WINAPI TransportData(LPVOID arg)
 {
     SOCKET clientSock = (SOCKET)arg;
@@ -159,9 +169,8 @@ DWORD WINAPI TransportData(LPVOID arg)
         }
         if (msgType & GAME_OVER)
         {
-            if (gGameFramework.m_pPlayer->GetLife() != 0) IsWin = true;
-
-            //recvn(clientSock, (char*)&/*blabla == 승리여부 변수*/, sizeof(/*blabla*/), 0);
+            if (gGameFramework.GetPlayerLife() > 0) IsWin = true;
+            RecvGameOver(clientSock);
             break;
         }
 

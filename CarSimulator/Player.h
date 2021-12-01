@@ -183,5 +183,5 @@ private:
 	int m_life = 3;
 
 public:
-	int GetLife() const { return m_life; }
+	//int GetLife() const { return m_life; }
 };
