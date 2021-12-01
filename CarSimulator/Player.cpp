@@ -419,68 +419,71 @@ CVehiclePlayer::~CVehiclePlayer()
 
 void CVehiclePlayer::Update(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fTimeElapsed, btDiscreteDynamicsWorld* pbtDynamicsWorld, DWORD dwBehave)
 {
-	if (m_gVehicleSteering > 0)
+	if (m_fBulletFireTime > 0.0f)
+		m_fBulletFireTime -= fTimeElapsed;
+
+	if (m_fVehicleSteering > 0)
 	{
-		m_gVehicleSteering -= m_steeringIncrement;
-		if (m_gVehicleSteering < 0)
+		m_fVehicleSteering -= m_steeringIncrement;
+		if (m_fVehicleSteering < 0)
 		{
-			m_gVehicleSteering = 0;
+			m_fVehicleSteering = 0;
 		}
 	}
 
-	else if (m_gVehicleSteering < 0)
+	else if (m_fVehicleSteering < 0)
 	{
-		m_gVehicleSteering += m_steeringIncrement;
-		if (m_gVehicleSteering > 0)
+		m_fVehicleSteering += m_steeringIncrement;
+		if (m_fVehicleSteering > 0)
 		{
-			m_gVehicleSteering = 0;
+			m_fVehicleSteering = 0;
 		}
 	}
 
-	m_gBreakingForce = 0.0f;
+	m_fBreakingForce = 0.0f;
 
-	if (m_gEngineForce > 0.0f)
+	if (m_fEngineForce > 0.0f)
 	{
-		m_gEngineForce -= 100.0f;
-		if (m_gEngineForce < 0.0f)
-			m_gEngineForce = 0.0f;
+		m_fEngineForce -= 100.0f;
+		if (m_fEngineForce < 0.0f)
+			m_fEngineForce = 0.0f;
 	}
 
 
 	if (dwBehave & KEY_LEFT)
 	{
-		m_gVehicleSteering -= m_steeringIncrement * 2;
-		if (m_gVehicleSteering < -m_steeringClamp)
-			m_gVehicleSteering = -m_steeringClamp;
+		m_fVehicleSteering -= m_steeringIncrement * 2;
+		if (m_fVehicleSteering < -m_steeringClamp)
+			m_fVehicleSteering = -m_steeringClamp;
 	}
 
 	if (dwBehave & KEY_RIGHT)
 	{
-		m_gVehicleSteering += m_steeringIncrement * 2;
-		if (m_gVehicleSteering > m_steeringClamp)
-			m_gVehicleSteering = m_steeringClamp;
+		m_fVehicleSteering += m_steeringIncrement * 2;
+		if (m_fVehicleSteering > m_steeringClamp)
+			m_fVehicleSteering = m_steeringClamp;
 	}
 
 	if (dwBehave & KEY_FORWARD)
 	{
-		m_gEngineForce = m_maxEngineForce;
+		m_fEngineForce = m_maxEngineForce;
 	}
 
 	if (dwBehave & KEY_BACKWARD)
 	{
-		m_gEngineForce = -m_maxEngineForce;
+		m_fEngineForce = -m_maxEngineForce;
 	}
 
 	if (dwBehave & KEY_SHIFT)
 	{
-		m_gBreakingForce = 20.0f;
+		m_fBreakingForce = 20.0f;
 
 		m_vehicle->getWheelInfo(2).m_frictionSlip = 20;
 		m_vehicle->getWheelInfo(3).m_frictionSlip = 20;
 	}
 	else
 	{
-		m_gBreakingForce = 0.0f;
+		m_fBreakingForce = 0.0f;
 
 		for(int i = 0; i < 4; ++i)
 			m_vehicle->getWheelInfo(i).m_frictionSlip = 500;
@@ -488,8 +491,11 @@ void CVehiclePlayer::Update(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList*
 	
 	if (dwBehave & KEY_X)
 	{
-		if(m_pBullet == NULL)
+		if (m_pBullet == NULL && m_fBulletFireTime <= 0.0f)
+		{
+			m_fBulletFireTime = 3.0f;
 			FireBullet(pd3dDevice, pd3dCommandList, pbtDynamicsWorld);
+		}
 	}
 
 	if (m_nNextFrameMsg & BULLET_DELETED)
@@ -500,20 +506,21 @@ void CVehiclePlayer::Update(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList*
 	{
 		m_nLife--;
 		SetRigidBodyPosition(m_xmf3SpawnPosition);
+		std::cout << "ÇöÀç ¸ñ¼û : " << m_nLife << std::endl << std::endl;
 	}
 	m_nNextFrameMsg = 0;
 
 	int wheelIndex = 2;
-	m_vehicle->applyEngineForce(m_gEngineForce, wheelIndex);
-	m_vehicle->setBrake(m_gBreakingForce, wheelIndex);
+	m_vehicle->applyEngineForce(m_fEngineForce, wheelIndex);
+	m_vehicle->setBrake(m_fBreakingForce, wheelIndex);
 	wheelIndex = 3;
-	m_vehicle->applyEngineForce(m_gEngineForce, wheelIndex);
-	m_vehicle->setBrake(m_gBreakingForce, wheelIndex);
+	m_vehicle->applyEngineForce(m_fEngineForce, wheelIndex);
+	m_vehicle->setBrake(m_fBreakingForce, wheelIndex);
 
 	wheelIndex = 0;
-	m_vehicle->setSteeringValue(m_gVehicleSteering, wheelIndex);
+	m_vehicle->setSteeringValue(m_fVehicleSteering, wheelIndex);
 	wheelIndex = 1;
-	m_vehicle->setSteeringValue(m_gVehicleSteering, wheelIndex);
+	m_vehicle->setSteeringValue(m_fVehicleSteering, wheelIndex);
 
 
 	btScalar m[16];

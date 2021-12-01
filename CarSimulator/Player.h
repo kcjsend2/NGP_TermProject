@@ -164,15 +164,16 @@ private:
 
 	int m_nNextFrameMsg = 0;
 
-	float m_gEngineForce = 0.f;
+	float m_fBulletFireTime = 0.0f;
+	float m_fEngineForce = 0.f;
 
 	float m_defaultBreakingForce = 10.f;
-	float m_gBreakingForce = 0.f;
+	float m_fBreakingForce = 0.f;
 
 	float m_maxEngineForce = 4000.f;
 	float m_EngineForceIncrement = 5.0f;
 
-	float m_gVehicleSteering = 0.f;
+	float m_fVehicleSteering = 0.f;
 	float m_steeringIncrement = 0.01f;
 	float m_steeringClamp = 0.1f;
 	float m_wheelRadius = 0.5f;

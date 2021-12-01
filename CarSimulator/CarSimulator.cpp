@@ -274,7 +274,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             if (g_bGameStarted)
             {
                 WaitForSingleObject(g_events[0], INFINITE);
-                std::cout << "렌더링 : " << g_frequency << std::endl;
                 ++g_frequency;
             }
 
@@ -284,7 +283,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             // 데이터 송신을 3번 했다면 데이터 송신 차례?
             if (g_bGameStarted && g_frequency > 2)
             {
-                std::cout << "송신" << std::endl << std::endl;
                 g_frequency = 0;
                 ResetEvent(g_events[0]);
                 SetEvent(g_events[1]);

@@ -4,7 +4,7 @@
 array<HANDLE, 4> g_events;      // 쓰레드 동기화를 위한 이벤트 객체
 array<HANDLE, 3> g_threads;     // 플레이어 정보 송수신 쓰레드 핸들
 array<PlayerData, 3> g_players; // 플레이어 정보
-
+array<array<bool, 3>, 3> g_bWasIntesected = { FALSE, FALSE, FALSE };
 int main()
 {
     WSADATA wsa;
@@ -174,8 +174,15 @@ int RecvN(const SOCKET& socket, char* buffer, int length, int flags)
 void RecvPlayerInfo(ThreadFuncParam* param)
 {
     RecvN(param->sock, (char*)&g_players[param->id], sizeof(PlayerData), 0);
-
     int msg{ NULL };
+
+    for (int i = 0; i < 3; ++i)
+    {
+        if (g_players[param->id].hasBullet == FALSE)
+        {
+            g_bWasIntesected[param->id][i] = FALSE;
+        }
+    }
 
     // 남의 총알에 피격당했는 지 검사
     if (isPlayerHit(param->id))
@@ -252,9 +259,13 @@ bool isPlayerHit(int playerIndex)
 {
     for (int i = 0; i < g_players.size(); ++i)
     {
-        if (i == playerIndex) continue;
+        if (i == playerIndex || g_bWasIntesected[playerIndex][i] == TRUE) continue;
         if (g_players[i].hasBullet && isCollided(playerIndex, i))
+        {
+            // playerIndex번 플레이어가 i번 플레이어에게 맞음
+            g_bWasIntesected[playerIndex][i] = TRUE;
             return true;
+        }
     }
     return false;
 }

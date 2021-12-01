@@ -34,7 +34,7 @@
 
 #include <DirectXCollision.h>
 #include <DXGIDebug.h>
-
+#include <iostream>
 
 #include "pix3.h"
 #include "d3dx12.h"
