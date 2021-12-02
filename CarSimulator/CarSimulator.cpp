@@ -292,7 +292,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             gGameFramework.FrameAdvance();
 
             // 데이터 송신을 3번 했다면 데이터 송신 차례?
-            if (g_bGameStarted && g_frequency > 4)
+            if (g_bGameStarted && g_frequency > 3)
             {
                 g_frequency = 0;
                 ResetEvent(g_events[0]);
