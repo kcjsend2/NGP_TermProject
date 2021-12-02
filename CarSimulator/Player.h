@@ -178,11 +178,4 @@ private:
 	float m_steeringClamp = 0.1f;
 	float m_wheelRadius = 0.5f;
 	float m_wheelWidth = 0.4f;
-
-// 게임, 네트워크와 관련된 변수와 함수는 아래에 작성한다.
-private:
-	int m_life = 3;
-
-public:
-	//int GetLife() const { return m_life; }
 };

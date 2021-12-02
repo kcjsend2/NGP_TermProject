@@ -495,7 +495,7 @@ void CVehiclePlayer::Update(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList*
 		{
 			if (m_pBullet == NULL && m_fBulletFireTime <= 0.0f)
 			{
-				m_fBulletFireTime = 3.0f;
+				m_fBulletFireTime = 1.5f;
 				FireBullet(pd3dDevice, pd3dCommandList, pbtDynamicsWorld);
 			}
 		}
