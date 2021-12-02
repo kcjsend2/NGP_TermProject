@@ -208,6 +208,9 @@ void InitNetworkSocket()
     SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (clientSocket == INVALID_SOCKET) err_quit("socket()");
 
+    int option = TRUE;
+    setsockopt(clientSocket,IPPROTO_TCP, TCP_NODELAY, (const char*)&option, sizeof(option));
+
     bool flag = TRUE;
     setsockopt(clientSocket, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
 
@@ -289,7 +292,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             gGameFramework.FrameAdvance();
 
             // 데이터 송신을 3번 했다면 데이터 송신 차례?
-            if (g_bGameStarted && g_frequency > 2)
+            if (g_bGameStarted && g_frequency > 4)
             {
                 g_frequency = 0;
                 ResetEvent(g_events[0]);

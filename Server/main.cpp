@@ -22,8 +22,8 @@ int main()
         exit(0);
     }
 
-    //bool flag = TRUE;
-    //setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
+    int option = TRUE;
+    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char*)&option, sizeof(option));
 
     SOCKADDR_IN serveraddr{};
     serveraddr.sin_family = AF_INET;
