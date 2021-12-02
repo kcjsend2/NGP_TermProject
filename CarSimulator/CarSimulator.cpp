@@ -14,8 +14,6 @@
 //#endif
 
 CGameFramework gGameFramework;
-int g_frequency = 0;
-
 #define MAX_LOADSTRING 100
 
 // 전역 변수:
@@ -27,6 +25,8 @@ std::array<HANDLE, 2> g_events;                 // 렌더, 송신 쓰레드 동�
 bool g_bGameStarted = false;                    // 게임이 시작되면 true로 바뀜
 bool g_bGameOver = false;                       // 게임이 종료되면 true로 바뀜
 bool g_isWin = false;                           // 게임 종료 시점에 목숨이 1이상이면 true, 그 외에는 false
+
+float g_fNetworkFrequency = 0.03f;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -285,16 +285,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             if (g_bGameStarted)
             {
                 WaitForSingleObject(g_events[0], INFINITE);
-                ++g_frequency;
             }
 
             // 렌더링
             gGameFramework.FrameAdvance();
+            g_fNetworkFrequency -= gGameFramework.GetGameTimer().GetTimeElapsed();
+            
 
-            // 데이터 송신을 3번 했다면 데이터 송신 차례?
-            if (g_bGameStarted && g_frequency > 3)
+            // 0.03초마다 네트워크 쓰레드 실행
+            if (g_bGameStarted && g_fNetworkFrequency < 0.0f)
             {
-                g_frequency = 0;
+                g_fNetworkFrequency = 0.03f;
                 ResetEvent(g_events[0]);
                 SetEvent(g_events[1]);
             }

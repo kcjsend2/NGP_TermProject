@@ -90,11 +90,11 @@ public:
 	//마지막으로 마우스 버튼을 클릭할 때의 마우스 커서의 위치이다.
 	POINT m_ptOldCursorPos;
 
-
-
 public:
 	CGameFramework();
 	~CGameFramework();
+
+	CGameTimer GetGameTimer() { return m_GameTimer; }
 
 	bool OnCreate(HINSTANCE hInstance, HWND hMainWnd);
 	//프레임워크를 초기화하는 함수이다(주 윈도우가 생성되면 호출된다).
