@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CarSimulator.h" />
+    <ClInclude Include="Connection.h" />
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DDSTextureLoader12.h" />
     <ClInclude Include="ShadowMap.h" />
@@ -176,6 +177,7 @@
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CarSimulator.cpp" />
+    <ClCompile Include="Connection.cpp" />
     <ClCompile Include="DDSTextureLoader12.cpp" />
     <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="GameFramework.cpp" />

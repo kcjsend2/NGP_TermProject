@@ -9,7 +9,6 @@
 #define KEY_SHIFT 0x40
 #define KEY_X 0x80
 
-
 #include "GameObject.h"
 #include "Camera.h"
 
